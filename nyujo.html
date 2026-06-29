@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新規入場者登録 | 安全書類管理</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 14px; }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .header { background: #fff; border-bottom: 0.5px solid #e0e0d8; padding: 10px 16px; position: sticky; top: 0; z-index: 10; }
+  .header-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .back-btn { background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 6px; padding: 4px 8px; font-size: 11px; color: #666; cursor: pointer; text-decoration: none; }
+  .header-title { font-size: 14px; font-weight: 700; }
+  .header-sub { font-size: 10px; color: #888; }
+  .step-bar { display: flex; gap: 3px; margin-top: 6px; }
+  .step-dot { height: 4px; border-radius: 2px; flex: 1; background: #e0e0d8; transition: background 0.2s; }
+  .step-dot.done { background: #93c5fd; }
+  .step-dot.active { background: #1a56db; }
+  .form-body { padding: 16px; }
+  .sec-label { font-size: 11px; color: #888; background: #f5f5f0; border-left: 2px solid #1a56db; padding: 3px 8px; border-radius: 0 4px 4px 0; margin-bottom: 8px; }
+  .field { margin-bottom: 10px; }
+  .field-label { font-size: 11px; color: #888; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+  .req { color: #dc2626; font-size: 10px; }
+  .auto-b { font-size: 9px; background: #dcfce7; color: #166534; padding: 1px 5px; border-radius: 99px; }
+  input[type="text"], input[type="date"], input[type="number"], select {
+    width: 100%; padding: 9px 10px; font-size: 13px; border: 0.5px solid #d0d0c8;
+    border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit;
+  }
+  input:focus, select:focus { outline: none; border-color: #1a56db; }
+  input.auto { background: #f5f5f0; color: #888; }
+  .field-row { display: flex; gap: 8px; }
+  .field-row .field { flex: 1; }
+  .tog-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tog-btn { padding: 7px 12px; font-size: 12px; border: 0.5px solid #d0d0c8; border-radius: 99px; background: #fff; color: #666; cursor: pointer; transition: all 0.15s; }
+  .tog-btn.on { background: #1a56db; border-color: #1a56db; color: #fff; font-weight: 700; }
+  .tog-btn.on-green { background: #057a55; border-color: #057a55; color: #fff; font-weight: 700; }
+  .ins-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 0.5px solid #e0e0d8; }
+  .ins-row:last-child { border-bottom: none; }
+  .ins-label { font-size: 12px; color: #1a1a1a; }
+  .ins-toggle { display: flex; gap: 4px; }
+  .ins-btn { padding: 5px 14px; font-size: 11px; border-radius: 99px; border: 0.5px solid #d0d0c8; background: #f5f5f0; color: #888; cursor: pointer; transition: all 0.15s; }
+  .ins-btn.yes { background: #057a55; border-color: #057a55; color: #fff; font-weight: 700; }
+  .ins-btn.no { background: #c81e1e; border-color: #c81e1e; color: #fff; font-weight: 700; }
+  .bp-alert { border-radius: 8px; padding: 8px 10px; font-size: 11px; margin-top: 6px; display: none; font-weight: 600; }
+  .bp-ok { background: #dcfce7; color: #057a55; border: 0.5px solid #86efac; }
+  .bp-warn { background: #fef3c7; color: #92400e; border: 0.5px solid #fcd34d; }
+  .bp-ng { background: #fee2e2; color: #c81e1e; border: 0.5px solid #fca5a5; }
+  .qual-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+  .qual-tag { padding: 5px 10px; font-size: 11px; border: 0.5px solid #d0d0c8; border-radius: 99px; background: #fff; color: #666; cursor: pointer; transition: all 0.15s; }
+  .qual-tag.selected { background: #1a56db; border-color: #1a56db; color: #fff; font-weight: 700; }
+  .hitori-box { background: #fef3c7; border: 0.5px solid #fcd34d; border-radius: 8px; padding: 10px 12px; margin-top: 8px; display: none; }
+  .hitori-title { font-size: 11px; font-weight: 700; color: #92400e; margin-bottom: 6px; }
+  .doc-body { padding: 14px 16px; font-size: 11px; line-height: 1.8; color: #1a1a1a; max-height: calc(100vh - 200px); overflow-y: auto; }
+  .doc-meta { display: flex; justify-content: space-between; font-size: 10px; color: #888; margin-bottom: 10px; }
+  .doc-koji { background: #f5f5f0; border: 0.5px solid #e0e0d8; border-radius: 6px; padding: 7px 10px; margin-bottom: 10px; }
+  .doc-h { font-size: 11px; font-weight: 700; color: #1a56db; margin: 10px 0 4px; }
+  .doc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
+  .doc-item { font-size: 10px; color: #1a1a1a; padding: 1px 0; display: flex; gap: 3px; }
+  .doc-warn { background: #fef3c7; border: 0.5px solid #fcd34d; border-radius: 6px; padding: 8px 10px; margin: 10px 0; font-size: 10px; color: #92400e; line-height: 1.6; font-weight: 600; }
+  .doc-note { font-size: 10px; color: #888; border-left: 2px solid #e0e0d8; padding-left: 6px; margin: 4px 0; }
+  .check-confirm { display: flex; align-items: flex-start; gap: 8px; background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 8px; padding: 10px; margin: 10px 16px; font-size: 11px; color: #1a1a1a; line-height: 1.5; }
+  .chk { width: 18px; height: 18px; border: 1.5px solid #d0d0c8; border-radius: 4px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all 0.15s; }
+  .chk.checked { background: #1a56db; border-color: #1a56db; color: #fff; }
+  canvas.sign-canvas { width: 100%; height: 100px; border: 0.5px solid #d0d0c8; border-radius: 8px; background: #f5f5f0; cursor: crosshair; touch-action: none; display: block; }
+  .sign-clear { font-size: 11px; color: #888; background: none; border: none; cursor: pointer; text-decoration: underline; float: right; margin-top: 4px; }
+  .footer { padding: 10px 16px 18px; border-top: 0.5px solid #e0e0d8; background: #fff; position: sticky; bottom: 0; display: flex; gap: 8px; }
+  .btn-back { background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 10px; padding: 11px 16px; font-size: 13px; color: #666; cursor: pointer; }
+  .btn-next { flex: 1; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; background: #1a56db; color: #fff; }
+  .btn-green { background: #057a55; }
+  .btn-next:disabled { opacity: 0.35; cursor: not-allowed; }
+  .complete-wrap { padding: 24px 16px; text-align: center; }
+  .complete-icon { width: 64px; height: 64px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 14px; }
+  .complete-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .complete-sub { font-size: 11px; color: #888; margin-bottom: 18px; line-height: 1.6; }
+  .qr-box { background: #f5f5f0; border: 0.5px solid #e0e0d8; border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+  .qr-title { font-size: 12px; font-weight: 700; color: #057a55; margin-bottom: 8px; }
+  .qr-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; width: 84px; margin: 0 auto 8px; }
+  .qb { aspect-ratio:1; border-radius:1px; }
+  .qb.b { background: #1a1a1a; }
+  .qb.w { background: #fff; }
+  .qr-hint { font-size: 10px; color: #888; text-align: center; }
+  .btn-wide { width: 100%; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; margin-bottom: 8px; background: #057a55; color: #fff; }
+  .btn-wide.outline { background: #f5f5f0; border: 0.5px solid #d0d0c8; color: #666; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- STEP 0: 資料閲覧 -->
+  <div id="s0" class="screen active">
+    <div class="header">
+      <div class="header-top">
+        <a href="index.html" class="back-btn">← ホーム</a>
+        <span class="header-title">新規入場者登録</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">事前確認</span>
+      </div>
+      <div class="header-sub">最後までスクロールして読んでください</div>
+    </div>
+    <div class="doc-body">
+      <div class="doc-meta"><span>令和　　年　　月　　日</span><span>大和ライフネクスト株式会社</span></div>
+      <div class="doc-koji">工事名称：<strong id="doc-koji-name">（案件から自動入力）</strong><br>教育担当者：（案件から自動入力）</div>
+      <div class="doc-note">工事中・作業に関して、近隣・作業場内等の協定書及び、その他打合せ等について、現場で守ることは、下記の通りです。</div>
+      <div class="doc-h">1. 作業時間等は次の通りです。</div>
+      <div class="doc-grid">
+        <div class="doc-item"><span>①</span><span>始業　9時00分から</span></div>
+        <div class="doc-item"><span>④</span><span>休憩15時00分から15分迄（午後）</span></div>
+        <div class="doc-item"><span>②</span><span>休憩10時30分から15分迄（午前）</span></div>
+        <div class="doc-item"><span>⑤</span><span>就業18時00分</span></div>
+        <div class="doc-item"><span>③</span><span>休憩12時00分から60分迄（昼食）</span></div>
+        <div class="doc-item"><span>⑥</span><span>定期休日（祝・日曜日）</span></div>
+      </div>
+      <div class="doc-h">2. 作業所の安全行事は次の通りです。</div>
+      <div class="doc-grid">
+        <div class="doc-item"><span>①</span><span>体操・朝礼　8時45分から</span></div>
+        <div class="doc-item"><span>③</span><span>持場の整理整頓・清掃　17時00分から</span></div>
+        <div class="doc-item"><span>②</span><span>安全ミーティング　8時50分から</span></div>
+        <div class="doc-item"><span>④</span><span>その他指示事項</span></div>
+      </div>
+      <div class="doc-h">3. 現場作業上で守るべきこと。</div>
+      <div class="doc-grid">
+        <div class="doc-item"><span>①</span><span>現場の安全行事には、必ず出席すること。</span></div>
+        <div class="doc-item"><span>⑫</span><span>足場等安全設備の不具合発見時は職長・所長に報告すること。</span></div>
+        <div class="doc-item"><span>②</span><span>安全指示書で指示されたことは、必ず守ること。</span></div>
+        <div class="doc-item"><span>⑬</span><span>不安全な行為はお互いに注意すること。</span></div>
+        <div class="doc-item"><span>③</span><span>常に整理・整頓・清掃に努めること。</span></div>
+        <div class="doc-item"><span>⑭</span><span>電動工具は絶縁検査を受け、使用前に試運転・点検をすること。</span></div>
+        <div class="doc-item"><span>④</span><span>ヘルメットはアゴ紐を締め、正しくかぶること。</span></div>
+        <div class="doc-item"><span>⑮</span><span>溶接ホルダー等は損傷のあるものは使用しないこと。</span></div>
+        <div class="doc-item"><span>⑤</span><span>昇降時は、昇降設備を必ず使用すること。</span></div>
+        <div class="doc-item"><span>⑯</span><span>資格を必要とする作業は、資格者以外に行わせないこと。</span></div>
+        <div class="doc-item"><span>⑥</span><span>高所作業（2m以上）では安全帯を必ず使用し、親綱等にきっちり掛けること。</span></div>
+        <div class="doc-item"><span>⑰</span><span>建設機械等、エンジンをかけたまま離れないこと。</span></div>
+        <div class="doc-item"><span>⑦</span><span>作業手順・ルールを守り、勝手な自己判断での作業はしないこと。</span></div>
+        <div class="doc-item"><span>⑱</span><span>建設機械等は年次検査・自主点検を行い、不備なものは持込まないこと。</span></div>
+        <div class="doc-item"><span>⑧</span><span>立入禁止の場所には許可なく立入らないこと。</span></div>
+        <div class="doc-item"><span>⑲</span><span>火気使用時は事前に職長・所長に報告し、養生・見張り・消火器設置をすること。</span></div>
+        <div class="doc-item"><span>⑨</span><span>指示された作業以外は、勝手にしないこと。</span></div>
+        <div class="doc-item"><span>⑳</span><span>作業者は職長・作業主任者の指示に従い、第三者への安全確保とモラルある行動をすること。</span></div>
+        <div class="doc-item"><span>⑩</span><span>高所から物の投げ捨て・投げ下ろしは絶対しないこと。</span></div>
+        <div class="doc-item"><span>⑪</span><span>ピット・開口部等をやむを得ず外す場合は事前に職長に報告し、作業終了時直ちに復旧すること。</span></div>
+      </div>
+      <div class="doc-note" style="margin-top:8px;">＊職長・作業者は全員参加で危険予知活動を行い、先取り安全の確保を図る。</div>
+      <div class="doc-note">＊作業所のルールを常に認識し、関係者全員が守り、快適な作業環境の保持につとめること。</div>
+      <div class="doc-warn">
+        ⚠️ 下記に該当する方は作業所の労災保険の使用が法的にできません。「労災保険特別加入制度」に加入し、万一の備えをおこなっておくこと。<br><br>
+        <strong>A：中小事業主</strong>（常時1名以上300名以下の労働者を使用している者）<br>
+        <strong>B：一人親方</strong>（労働者を使用しないで一人で仕事を請け負い作業をする者）<br>
+        ＊親子等、身内で請負仕事をおこなう場合も、これにあたる。
+      </div>
+    </div>
+    <div class="check-confirm">
+      <div class="chk" id="doc-chk" onclick="toggleDocChk()"></div>
+      <span>上記の内容をすべて読み、理解しました。現場のルールを遵守します。</span>
+    </div>
+    <div class="footer">
+      <button class="btn-next" id="btn-doc-next" disabled onclick="goTo('s1')">確認しました → 入力へ進む</button>
+    </div>
+  </div>
+
+  <!-- STEP 1: 基本情報 -->
+  <div id="s1" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="goTo('s0')">← 戻る</button>
+        <span class="header-title">新規入場者登録</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">1 / 6</span>
+      </div>
+      <div class="header-sub">基本情報を入力してください</div>
+      <div class="step-bar" id="sb1"></div>
+    </div>
+    <div class="form-body">
+      <div class="field"><div class="field-label">氏名（漢字）<span class="req">必須</span></div><input type="text" id="f-name" placeholder="例：辻本 大樹"></div>
+      <div class="field"><div class="field-label">ふりがな <span class="req">必須</span></div><input type="text" id="f-kana" placeholder="例：つじもと だいき"></div>
+      <div class="field-row">
+        <div class="field"><div class="field-label">生年月日 <span class="req">必須</span></div><input type="date" id="f-birth" oninput="calcAge()"></div>
+        <div class="field"><div class="field-label">年齢 <span class="auto-b">自動</span></div><input type="text" id="f-age" class="auto" readonly placeholder="自動計算"></div>
+      </div>
+      <div class="field">
+        <div class="field-label">血液型 <span class="req">必須</span></div>
+        <div class="tog-row" id="g-ketsueki">
+          <button class="tog-btn" onclick="selOne('g-ketsueki',this)">A型</button>
+          <button class="tog-btn" onclick="selOne('g-ketsueki',this)">B型</button>
+          <button class="tog-btn" onclick="selOne('g-ketsueki',this)">O型</button>
+          <button class="tog-btn" onclick="selOne('g-ketsueki',this)">AB型</button>
+          <button class="tog-btn" onclick="selOne('g-ketsueki',this)">不明</button>
+        </div>
+      </div>
+      <div class="field"><div class="field-label">現住所 <span class="req">必須</span></div><input type="text" id="f-jusho" placeholder="例：大阪府茨木市寺田町9-28-401"></div>
+    </div>
+    <div class="footer">
+      <button class="btn-back" onclick="goTo('s0')">← 戻る</button>
+      <button class="btn-next" onclick="next1()">次へ →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: 雇用形態 -->
+  <div id="s2" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="goTo('s1')">← 戻る</button>
+        <span class="header-title">新規入場者登録</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">2 / 6</span>
+      </div>
+      <div class="header-sub">雇用形態と所属を入力してください</div>
+      <div class="step-bar" id="sb2"></div>
+    </div>
+    <div class="form-body">
+      <div class="field">
+        <div class="field-label">所属会社 <span class="req">必須</span></div>
+        <select id="f-kaisha"><option value="">選択してください</option><option>好竹エンジニアリング株式会社（1次）</option><option>山下電気（2次）</option><option>協力会社C（3次）</option></select>
+      </div>
+      <div class="field">
+        <div class="field-label">職種 <span class="req">必須</span></div>
+        <div class="tog-row" id="g-shokushu">
+          <button class="tog-btn" onclick="selOne('g-shokushu',this)">電工</button>
+          <button class="tog-btn" onclick="selOne('g-shokushu',this)">内装</button>
+          <button class="tog-btn" onclick="selOne('g-shokushu',this)">設備</button>
+          <button class="tog-btn" onclick="selOne('g-shokushu',this)">土工</button>
+          <button class="tog-btn" onclick="selOne('g-shokushu',this)">現場管理</button>
+          <button class="tog-btn" onclick="selOne('g-shokushu',this)">その他</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">役割・属性（複数選択可）</div>
+        <div class="tog-row">
+          <button class="tog-btn" onclick="this.classList.toggle('on')">現場代理人（現）</button>
+          <button class="tog-btn" onclick="this.classList.toggle('on')">主任技術者（技）</button>
+          <button class="tog-btn" onclick="this.classList.toggle('on')">作業主任者（主）</button>
+          <button class="tog-btn" onclick="this.classList.toggle('on')">職長（職）</button>
+          <button class="tog-btn" onclick="this.classList.toggle('on')">安全衛生責任者（安）</button>
+          <button class="tog-btn" onclick="this.classList.toggle('on')">女性作業員（女）</button>
+          <button class="tog-btn" onclick="this.classList.toggle('on')">18歳未満（未）</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">雇用形態 <span class="req">必須</span></div>
+        <div class="tog-row" id="g-koyo">
+          <button class="tog-btn" onclick="selKoyo(this,'常用雇用')">常用雇用</button>
+          <button class="tog-btn" onclick="selKoyo(this,'一人親方')">一人親方</button>
+          <button class="tog-btn" onclick="selKoyo(this,'日雇い')">日雇い</button>
+        </div>
+        <div class="hitori-box" id="hitori-box">
+          <div class="hitori-title">⚠️ 一人親方の方は特別労災加入が必要です</div>
+          <div class="field-label">特別労災加入 <span class="req">必須</span></div>
+          <div class="tog-row" id="g-tokurosa">
+            <button class="tog-btn" onclick="selOne('g-tokurosa',this,'on-green')">加入している</button>
+            <button class="tog-btn" onclick="selOne('g-tokurosa',this)">未加入（入場不可）</button>
+          </div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><div class="field-label">雇入年月日 <span class="req">必須</span></div><input type="date" id="f-koyobi"></div>
+        <div class="field"><div class="field-label">経験年数 <span class="req">必須</span></div><input type="text" placeholder="例：6年"></div>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn-back" onclick="goTo('s1')">← 戻る</button>
+      <button class="btn-next" onclick="goTo('s3')">次へ →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: 血圧・健康 -->
+  <div id="s3" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="goTo('s2')">← 戻る</button>
+        <span class="header-title">新規入場者登録</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">3 / 6</span>
+      </div>
+      <div class="header-sub">血圧・健康・緊急連絡先</div>
+      <div class="step-bar" id="sb3"></div>
+    </div>
+    <div class="form-body">
+      <div class="sec-label">🩺 血圧測定（入場前に測定してください）</div>
+      <div class="field-row">
+        <div class="field"><div class="field-label">血圧（上）mmHg <span class="req">必須</span></div><input type="number" id="f-bph" placeholder="例：129" oninput="checkBP()"></div>
+        <div class="field"><div class="field-label">血圧（下）mmHg <span class="req">必須</span></div><input type="number" id="f-bpl" placeholder="例：81" oninput="checkBP()"></div>
+      </div>
+      <div class="bp-alert bp-ok" id="bp-ok">✅ 正常範囲です。入場できます。</div>
+      <div class="bp-alert bp-warn" id="bp-warn">⚠️ 血圧が高めです。体調に注意して作業してください。</div>
+      <div class="bp-alert bp-ng" id="bp-ng">🚫 血圧が高すぎます。本日の入場はできません。現場責任者にご連絡ください。</div>
+      <div style="font-size:10px;color:#888;margin-top:6px;padding:5px 8px;background:#f5f5f0;border-radius:6px;">🚫 上180以上 or 下110以上 → 入場不可　⚠️ 上160〜179 or 下100〜109 → 要注意</div>
+      <div class="sec-label" style="margin-top:14px;">🏥 健康診断</div>
+      <div class="field-row">
+        <div class="field"><div class="field-label">最近の健康診断日 <span class="req">必須</span></div><input type="date" id="f-kenko"></div>
+        <div class="field"><div class="field-label">種類 <span class="req">必須</span></div><select><option value="">選択</option><option>定期健康診断</option><option>雇入時健康診断</option><option>特殊健康診断</option></select></div>
+      </div>
+      <div class="sec-label" style="margin-top:14px;">👨‍👩‍👧 家族緊急連絡先</div>
+      <div class="field"><div class="field-label">氏名 <span class="req">必須</span></div><input type="text" placeholder="例：辻本 花子"></div>
+      <div class="field"><div class="field-label">続柄 <span class="req">必須</span></div><select><option value="">選択</option><option>配偶者</option><option>父</option><option>母</option><option>子</option><option>その他</option></select></div>
+    </div>
+    <div class="footer">
+      <button class="btn-back" onclick="goTo('s2')">← 戻る</button>
+      <button class="btn-next" id="btn-s3" onclick="goTo('s4')">次へ →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: 保険 -->
+  <div id="s4" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="goTo('s3')">← 戻る</button>
+        <span class="header-title">新規入場者登録</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">4 / 6</span>
+      </div>
+      <div class="header-sub">保険・退職金の加入状況</div>
+      <div class="step-bar" id="sb4"></div>
+    </div>
+    <div class="form-body">
+      <div class="sec-label">加入 / 未加入を選んでください</div>
+      <div class="ins-row"><span class="ins-label">健康保険</span><div class="ins-toggle"><button class="ins-btn" onclick="insT(this,'yes')">加入</button><button class="ins-btn" onclick="insT(this,'no')">未加入</button></div></div>
+      <div class="ins-row"><span class="ins-label">年金保険</span><div class="ins-toggle"><button class="ins-btn" onclick="insT(this,'yes')">加入</button><button class="ins-btn" onclick="insT(this,'no')">未加入</button></div></div>
+      <div class="ins-row"><span class="ins-label">雇用保険</span><div class="ins-toggle"><button class="ins-btn" onclick="insT(this,'yes')">加入</button><button class="ins-btn" onclick="insT(this,'no')">未加入</button></div></div>
+      <div class="ins-row"><span class="ins-label">特別労災（一人親方）</span><div class="ins-toggle"><button class="ins-btn" onclick="insT(this,'yes')">加入</button><button class="ins-btn" onclick="insT(this,'no')">未加入</button></div></div>
+      <div class="ins-row"><span class="ins-label">中退共</span><div class="ins-toggle"><button class="ins-btn" onclick="insT(this,'yes')">加入</button><button class="ins-btn" onclick="insT(this,'no')">未加入</button></div></div>
+      <div class="ins-row"><span class="ins-label">建退共</span><div class="ins-toggle"><button class="ins-btn" onclick="insT(this,'yes')">加入</button><button class="ins-btn" onclick="insT(this,'no')">未加入</button></div></div>
+    </div>
+    <div class="footer">
+      <button class="btn-back" onclick="goTo('s3')">← 戻る</button>
+      <button class="btn-next" onclick="goTo('s5')">次へ →</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: 資格 -->
+  <div id="s5" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="goTo('s4')">← 戻る</button>
+        <span class="header-title">新規入場者登録</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">5 / 6</span>
+      </div>
+      <div class="header-sub">保有資格・免許を選択（複数選択可）</div>
+      <div class="step-bar" id="sb5"></div>
+    </div>
+    <div class="form-body">
+      <div class="sec-label">教育区分</div>
+      <div class="qual-grid">
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">雇入時教育</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">職長教育</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">職長・安責</button>
+      </div>
+      <div class="sec-label" style="margin-top:10px;">免許</div>
+      <div class="qual-grid">
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">第1種電気工事士</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">第2種電気工事士</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">1級電気施工管理技士</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">2級電気施工管理技士</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">1級建築施工管理技士</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">2級建築施工管理技士</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">消防設備士</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">1級管工事施工管理技士</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">移動式クレーン運転士</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">その他（自由記入）</button>
+      </div>
+      <div class="sec-label" style="margin-top:10px;">技能講習</div>
+      <div class="qual-grid">
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">玉掛け</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">足場の組立て</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">高所作業車</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">低圧電気取扱</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">高圧・特別高圧電気取扱</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">酸欠・硫化水素</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">石綿作業主任者</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">有機溶剤作業主任者</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">フォークリフト</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">小型移動式クレーン</button>
+        <button class="qual-tag" onclick="this.classList.toggle('selected')">その他（自由記入）</button>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn-back" onclick="goTo('s4')">← 戻る</button>
+      <button class="btn-next" onclick="goTo('s6')">次へ →</button>
+    </div>
+  </div>
+
+  <!-- STEP 6: サイン -->
+  <div id="s6" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="goTo('s5')">← 戻る</button>
+        <span class="header-title">新規入場者登録</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">6 / 6</span>
+      </div>
+      <div class="header-sub">受講確認・手書きサイン</div>
+      <div class="step-bar" id="sb6"></div>
+    </div>
+    <div class="form-body">
+      <div class="field"><div class="field-label">入場（教育）年月日 <span class="auto-b">自動</span></div><input type="text" id="f-nyujodate" class="auto" readonly></div>
+      <div class="field" style="margin-top:10px;">
+        <div class="field-label">本人サイン <span class="req">必須</span></div>
+        <div style="font-size:10px;color:#888;margin-bottom:6px;">指でなぞってサインしてください</div>
+        <canvas id="sign-canvas" class="sign-canvas" width="440" height="100"></canvas>
+        <button class="sign-clear" onclick="clearSign()">クリア</button>
+      </div>
+      <div style="clear:both;"></div>
+      <div class="check-confirm" style="margin:10px 0 0;">
+        <div class="chk" id="sign-chk" onclick="toggleSignChk()"></div>
+        <span>新規入場教育の内容をすべて理解し、現場ルールを遵守することを誓約します。</span>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn-back" onclick="goTo('s5')">← 戻る</button>
+      <button class="btn-next btn-green" id="btn-submit" disabled onclick="submitForm()">送信して完了 ✓</button>
+    </div>
+  </div>
+
+  <!-- 完了 -->
+  <div id="s-done" class="screen">
+    <div class="complete-wrap">
+      <div class="complete-icon">✅</div>
+      <div class="complete-title">登録が完了しました</div>
+      <div class="complete-sub">QRコードを保存してください<br>毎日の入退場記録に使います</div>
+      <div class="qr-box">
+        <div class="qr-title">📱 あなたの入退場QRコード</div>
+        <div class="qr-grid">
+          <div class="qb b"></div><div class="qb b"></div><div class="qb b"></div><div class="qb w"></div><div class="qb b"></div><div class="qb b"></div><div class="qb b"></div>
+          <div class="qb b"></div><div class="qb w"></div><div class="qb b"></div><div class="qb b"></div><div class="qb b"></div><div class="qb w"></div><div class="qb b"></div>
+          <div class="qb b"></div><div class="qb w"></div><div class="qb b"></div><div class="qb w"></div><div class="qb b"></div><div class="qb w"></div><div class="qb b"></div>
+          <div class="qb w"></div><div class="qb b"></div><div class="qb w"></div><div class="qb b"></div><div class="qb w"></div><div class="qb b"></div><div class="qb w"></div>
+          <div class="qb b"></div><div class="qb w"></div><div class="qb b"></div><div class="qb w"></div><div class="qb b"></div><div class="qb w"></div><div class="qb b"></div>
+          <div class="qb b"></div><div class="qb w"></div><div class="qb w"></div><div class="qb b"></div><div class="qb w"></div><div class="qb w"></div><div class="qb b"></div>
+          <div class="qb b"></div><div class="qb b"></div><div class="qb b"></div><div class="qb w"></div><div class="qb b"></div><div class="qb b"></div><div class="qb b"></div>
+        </div>
+        <div class="qr-hint" id="qr-name-hint">スクリーンショットを保存してください</div>
+      </div>
+      <button class="btn-wide" onclick="alert('保存・共有（実装予定）')">📋 QRを保存 / 共有する</button>
+      <button class="btn-wide outline" onclick="goTo('s0')">別の作業員を登録する</button>
+      <a href="index.html" style="display:block;text-align:center;margin-top:8px;font-size:13px;color:#888;">ホームへ戻る</a>
+    </div>
+  </div>
+
+</div>
+<script>
+  function renderSB(step) {
+    for(let i=1;i<=6;i++){
+      const el=document.getElementById('sb'+i);
+      if(!el)continue;
+      el.innerHTML='';
+      for(let j=1;j<=6;j++){
+        const d=document.createElement('div');
+        d.className='step-dot'+(j<i?' done':j===i?' active':'');
+        el.appendChild(d);
+      }
+    }
+  }
+  renderSB(1);
+  function goTo(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0,0);
+    const n=parseInt(id.replace('s',''));
+    if(!isNaN(n))renderSB(n);
+    if(id==='s6'){
+      const t=new Date();
+      document.getElementById('f-nyujodate').value=`${t.getFullYear()}年${t.getMonth()+1}月${t.getDate()}日（自動入力）`;
+    }
+  }
+  function toggleDocChk(){
+    const c=document.getElementById('doc-chk');
+    c.classList.toggle('checked');
+    document.getElementById('btn-doc-next').disabled=!c.classList.contains('checked');
+  }
+  function calcAge(){
+    const b=new Date(document.getElementById('f-birth').value);
+    if(isNaN(b))return;
+    const t=new Date();let a=t.getFullYear()-b.getFullYear();
+    const m=t.getMonth()-b.getMonth();
+    if(m<0||(m===0&&t.getDate()<b.getDate()))a--;
+    document.getElementById('f-age').value=a+'歳';
+  }
+  function selOne(gid,btn,cls='on'){
+    document.getElementById(gid).querySelectorAll('.tog-btn').forEach(b=>b.classList.remove('on','on-green'));
+    btn.classList.add(cls);
+  }
+  function selKoyo(btn,val){
+    document.getElementById('g-koyo').querySelectorAll('.tog-btn').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    document.getElementById('hitori-box').style.display=val==='一人親方'?'block':'none';
+  }
+  function insT(btn,type){
+    btn.closest('.ins-toggle').querySelectorAll('.ins-btn').forEach(b=>b.classList.remove('yes','no'));
+    btn.classList.add(type);
+  }
+  function checkBP(){
+    const h=parseInt(document.getElementById('f-bph').value);
+    const l=parseInt(document.getElementById('f-bpl').value);
+    ['bp-ok','bp-warn','bp-ng'].forEach(id=>document.getElementById(id).style.display='none');
+    const btn=document.getElementById('btn-s3');
+    if(!h||!l)return;
+    if(h>=180||l>=110){document.getElementById('bp-ng').style.display='block';if(btn)btn.disabled=true;}
+    else if(h>=160||l>=100){document.getElementById('bp-warn').style.display='block';if(btn)btn.disabled=false;}
+    else{document.getElementById('bp-ok').style.display='block';if(btn)btn.disabled=false;}
+  }
+  function next1(){
+    if(!document.getElementById('f-name').value||!document.getElementById('f-kana').value){
+      alert('氏名・ふりがなは必須です');return;
+    }
+    goTo('s2');
+  }
+  const cv=document.getElementById('sign-canvas');
+  const ctx=cv.getContext('2d');
+  let drawing=false,signed=false,signChk=false;
+  ctx.lineWidth=2.5;ctx.lineCap='round';ctx.strokeStyle='#1a56db';
+  function getP(e){
+    const r=cv.getBoundingClientRect();
+    const src=e.touches?e.touches[0]:e;
+    return{x:(src.clientX-r.left)*(cv.width/r.width),y:(src.clientY-r.top)*(cv.height/r.height)};
+  }
+  cv.addEventListener('mousedown',e=>{drawing=true;const p=getP(e);ctx.beginPath();ctx.moveTo(p.x,p.y);});
+  cv.addEventListener('mousemove',e=>{if(!drawing)return;const p=getP(e);ctx.lineTo(p.x,p.y);ctx.stroke();signed=true;updBtn();});
+  cv.addEventListener('mouseup',()=>drawing=false);
+  cv.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=getP(e);ctx.beginPath();ctx.moveTo(p.x,p.y);},{passive:false});
+  cv.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=getP(e);ctx.lineTo(p.x,p.y);ctx.stroke();signed=true;updBtn();},{passive:false});
+  cv.addEventListener('touchend',()=>drawing=false);
+  function clearSign(){ctx.clearRect(0,0,cv.width,cv.height);signed=false;updBtn();}
+  function toggleSignChk(){
+    const c=document.getElementById('sign-chk');c.classList.toggle('checked');
+    signChk=c.classList.contains('checked');updBtn();
+  }
+  function updBtn(){document.getElementById('btn-submit').disabled=!(signed&&signChk);}
+  function submitForm(){
+    const name=document.getElementById('f-name').value||'';
+    document.getElementById('qr-name-hint').textContent=name?`${name} さんのQRコード`:'スクリーンショットを保存してください';
+    goTo('s-done');
+  }
+</script>
+</body>
+</html>

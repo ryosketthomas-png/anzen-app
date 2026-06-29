@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>安全日誌・KY指示書 | 安全書類管理</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 14px; }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .header { background: #fff; border-bottom: 0.5px solid #e0e0d8; padding: 10px 16px; position: sticky; top: 0; z-index: 10; }
+  .header-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .back-btn { background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 6px; padding: 4px 8px; font-size: 11px; color: #666; cursor: pointer; text-decoration: none; }
+  .header-title { font-size: 14px; font-weight: 700; }
+  .header-sub { font-size: 10px; color: #888; }
+  .step-bar { display: flex; gap: 3px; margin-top: 6px; }
+  .step-dot { height: 4px; border-radius: 2px; flex: 1; background: #e0e0d8; }
+  .step-dot.done { background: #93c5fd; }
+  .step-dot.active { background: #1a56db; }
+  .form-body { padding: 16px; }
+  .sec-label { font-size: 11px; color: #888; background: #f5f5f0; border-left: 2px solid #1a56db; padding: 3px 8px; border-radius: 0 4px 4px 0; margin-bottom: 8px; }
+  .field { margin-bottom: 12px; }
+  .field-label { font-size: 11px; color: #888; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+  .req { color: #dc2626; font-size: 10px; }
+  .auto-b { font-size: 9px; background: #dcfce7; color: #166534; padding: 1px 5px; border-radius: 99px; }
+  input[type="text"], input[type="date"], input[type="number"], select, textarea {
+    width: 100%; padding: 9px 10px; font-size: 13px; border: 0.5px solid #d0d0c8;
+    border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: #1a56db; }
+  input.auto { background: #f5f5f0; color: #888; }
+  textarea { resize: vertical; min-height: 72px; }
+  .field-row { display: flex; gap: 8px; }
+  .field-row .field { flex: 1; }
+  .weather-row { display: flex; gap: 8px; }
+  .weather-btn { flex: 1; border: 1.5px solid #d0d0c8; border-radius: 10px; padding: 10px 4px; font-size: 18px; text-align: center; cursor: pointer; background: #fff; transition: all 0.15s; }
+  .weather-btn .wlabel { font-size: 10px; color: #888; margin-top: 3px; }
+  .weather-btn.sel { border-color: #1a56db; background: #eff6ff; }
+  .weather-btn.sel .wlabel { color: #1a56db; font-weight: 700; }
+  .ai-box { background: #f5f3ff; border: 1px solid #c4b5fd; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+  .ai-box-title { font-size: 11px; font-weight: 700; color: #5b21b6; margin-bottom: 6px; }
+  .ai-box-desc { font-size: 10px; color: #5b21b6; opacity: 0.85; margin-bottom: 8px; line-height: 1.5; }
+  .ai-textarea { width: 100%; padding: 8px 10px; font-size: 13px; border: 0.5px solid #d0d0c8; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; resize: vertical; min-height: 64px; box-sizing: border-box; }
+  .ai-textarea:focus { outline: none; border-color: #7c6fcd; }
+  .ai-gen-btn { width: 100%; margin-top: 8px; padding: 10px; font-size: 12px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; background: #5145cd; color: #fff; }
+  .ai-gen-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .ai-loading { background: #f5f3ff; border-radius: 10px; padding: 20px; text-align: center; margin-bottom: 8px; display: none; }
+  .spinner { width: 28px; height: 28px; border: 3px solid rgba(81,69,205,0.2); border-top-color: #5145cd; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .ai-loading-text { font-size: 12px; color: #5b21b6; font-weight: 600; }
+  .ky-list { background: #fff; border: 0.5px solid #d0d0c8; border-radius: 10px; overflow: hidden; margin-bottom: 6px; }
+  .ky-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-bottom: 0.5px solid #e0e0d8; cursor: pointer; }
+  .ky-item:last-child { border-bottom: none; }
+  .ky-item.selected { background: #f5f3ff; }
+  .ky-chk { width: 18px; height: 18px; border: 1.5px solid #d0d0c8; border-radius: 4px; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .ky-chk.on { background: #5145cd; border-color: #5145cd; color: #fff; font-size: 11px; font-weight: 700; }
+  .ky-num { font-size: 11px; color: #888; flex-shrink: 0; margin-top: 2px; min-width: 18px; }
+  .ky-text { font-size: 12px; color: #1a1a1a; line-height: 1.6; flex: 1; }
+  .ky-item.selected .ky-text { color: #3730a3; }
+  .ky-count { font-size: 10px; color: #888; text-align: right; margin-bottom: 4px; }
+  .kt-table { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+  .kt-header { display: grid; grid-template-columns: 1fr 44px 44px 44px; padding: 6px 12px; background: #f5f5f0; border-bottom: 0.5px solid #e0e0d8; }
+  .kt-header span { font-size: 10px; color: #888; font-weight: 700; text-align: center; }
+  .kt-header span:first-child { text-align: left; }
+  .kt-row { display: grid; grid-template-columns: 1fr 44px 44px 44px; padding: 8px 12px; border-bottom: 0.5px solid #e0e0d8; align-items: center; }
+  .kt-row:last-child { border-bottom: none; }
+  .kt-row.total { background: #f5f5f0; }
+  .kt-name { font-size: 12px; font-weight: 600; }
+  .kt-num { font-size: 13px; font-weight: 700; text-align: center; }
+  .num-in { color: #057a55; }
+  .num-out { color: #c81e1e; }
+  .num-cur { color: #1a56db; }
+  .summary-card { background: #f5f5f0; border: 0.5px solid #e0e0d8; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+  .s-row { display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 0.5px solid #e0e0d8; }
+  .s-row:last-child { border-bottom: none; }
+  .s-label { color: #888; }
+  .s-val { color: #1a1a1a; font-weight: 600; max-width: 220px; text-align: right; }
+  .ky-preview { background: #f5f3ff; border: 0.5px solid #c4b5fd; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+  .ky-preview-title { font-size: 11px; font-weight: 700; color: #5145cd; margin-bottom: 6px; }
+  .ky-preview-item { font-size: 11px; color: #3730a3; padding: 2px 0; display: flex; gap: 5px; line-height: 1.5; }
+  .footer { padding: 10px 16px 18px; border-top: 0.5px solid #e0e0d8; background: #fff; position: sticky; bottom: 0; display: flex; gap: 8px; }
+  .btn-back { background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 10px; padding: 11px 16px; font-size: 13px; color: #666; cursor: pointer; }
+  .btn-next { flex: 1; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; }
+  .btn-blue { background: #1a56db; color: #fff; }
+  .btn-purple { background: #5145cd; color: #fff; }
+  .btn-green { background: #057a55; color: #fff; }
+  .complete-wrap { padding: 24px 16px; text-align: center; }
+  .complete-icon { width: 64px; height: 64px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 14px; }
+  .complete-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .complete-sub { font-size: 11px; color: #888; margin-bottom: 18px; line-height: 1.6; }
+  .output-card { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 8px; }
+  .output-icon { font-size: 22px; flex-shrink: 0; }
+  .output-name { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+  .output-desc { font-size: 10px; color: #888; margin-top: 2px; }
+  .btn-wide { width: 100%; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- STEP 1 -->
+  <div id="s1" class="screen active">
+    <div class="header">
+      <div class="header-top">
+        <a href="index.html" class="back-btn">← ホーム</a>
+        <span class="header-title">📋 安全日誌</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">1 / 4</span>
+      </div>
+      <div class="header-sub">本日の基本情報を入力してください</div>
+      <div class="step-bar" id="sb1"></div>
+    </div>
+    <div class="form-body">
+      <div class="field"><div class="field-label">案件 <span class="req">必須</span></div>
+        <select id="f-anken"><option value="">選択してください</option><option>淀屋橋ゲートタワー工事</option><option>なんばパークス改修工事</option></select>
+      </div>
+      <div class="field"><div class="field-label">作業日 <span class="auto-b">自動</span></div><input type="text" id="f-date" class="auto" readonly></div>
+      <div class="field">
+        <div class="field-label">天気 <span class="req">必須</span></div>
+        <div class="weather-row">
+          <div class="weather-btn" onclick="selWeather(this,'晴れ')">☀️<div class="wlabel">晴れ</div></div>
+          <div class="weather-btn" onclick="selWeather(this,'曇り')">⛅<div class="wlabel">曇り</div></div>
+          <div class="weather-btn" onclick="selWeather(this,'雨')">🌧<div class="wlabel">雨</div></div>
+          <div class="weather-btn" onclick="selWeather(this,'雪')">❄️<div class="wlabel">雪</div></div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><div class="field-label">気温（℃）</div><input type="number" id="f-temp" placeholder="例：28"></div>
+        <div class="field"><div class="field-label">作業責任者 <span class="req">必須</span></div><input type="text" id="f-sekinin" placeholder="例：佐藤 友和"></div>
+      </div>
+      <div class="field"><div class="field-label">本日の入場者数 <span class="auto-b">自動</span></div><input type="text" class="auto" readonly value="入退場記録から自動集計"></div>
+    </div>
+    <div class="footer"><button class="btn-next btn-blue" onclick="next1()">次へ → 作業内容・KY</button></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div id="s2" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="goTo('s1')">← 戻る</button>
+        <span class="header-title">📋 安全日誌</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">2 / 4</span>
+      </div>
+      <div class="header-sub">作業内容を入力してKY安全対策を生成します</div>
+      <div class="step-bar" id="sb2"></div>
+    </div>
+    <div class="form-body">
+      <div class="field"><div class="field-label">本日の作業内容 <span class="req">必須</span></div><textarea id="f-sagyo" placeholder="例：22階 天井内電気配線工事・幹線引込作業"></textarea></div>
+      <div class="ai-box">
+        <div class="ai-box-title">✨ AI安全対策提案</div>
+        <div class="ai-box-desc">作業内容を入力して「生成する」を押すと、AIが作業に応じた安全対策を10個提案します。</div>
+        <button class="ai-gen-btn" id="ai-gen-btn" onclick="generateKY()">✨ AI安全対策を生成する</button>
+      </div>
+      <div class="ai-loading" id="ai-loading">
+        <div class="spinner"></div>
+        <div class="ai-loading-text" id="ai-loading-text">作業内容を解析中...</div>
+      </div>
+      <div id="ky-area" style="display:none;">
+        <div class="ky-count" id="ky-count">0個選択中（3〜5個推奨）</div>
+        <div class="ky-list" id="ky-list"></div>
+        <button style="font-size:11px;color:#5145cd;background:none;border:none;cursor:pointer;text-decoration:underline;margin-top:4px;" onclick="generateKY()">↺ 再生成する</button>
+      </div>
+      <div class="field" style="margin-top:12px;"><div class="field-label">ヒヤリハット・特記事項（任意）</div><textarea id="f-hiyari" placeholder="例：高所作業中に工具を落としそうになった"></textarea></div>
+    </div>
+    <div class="footer">
+      <button class="btn-back" onclick="goTo('s1')">← 戻る</button>
+      <button class="btn-next btn-purple" onclick="next2()">次へ → 人員集計</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div id="s3" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="goTo('s2')">← 戻る</button>
+        <span class="header-title">📋 安全日誌</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">3 / 4</span>
+      </div>
+      <div class="header-sub">工種別人員・安全チェックリスト</div>
+      <div class="step-bar" id="sb3"></div>
+    </div>
+    <div class="form-body">
+      <div class="sec-label">📊 工種別人員（本日）</div>
+      <div class="kt-table">
+        <div class="kt-header"><span>工種</span><span>入場</span><span>退場</span><span>現在</span></div>
+        <div class="kt-row"><div><div class="kt-name">電工</div></div><div class="kt-num num-in">6</div><div class="kt-num num-out">1</div><div class="kt-num num-cur">5</div></div>
+        <div class="kt-row"><div><div class="kt-name">現場管理</div></div><div class="kt-num num-in">1</div><div class="kt-num num-out">0</div><div class="kt-num num-cur">1</div></div>
+        <div class="kt-row"><div><div class="kt-name">内装</div></div><div class="kt-num num-in">2</div><div class="kt-num num-out">0</div><div class="kt-num num-cur">2</div></div>
+        <div class="kt-row total"><div><div class="kt-name" style="color:#1a56db;">合計</div></div><div class="kt-num num-in" style="font-size:15px;">9</div><div class="kt-num num-out" style="font-size:15px;">1</div><div class="kt-num num-cur" style="font-size:15px;">8</div></div>
+      </div>
+      <div class="sec-label" style="margin-top:4px;">✅ 安全チェックリスト（作業前）</div>
+      <div class="ky-list" id="cl-list"></div>
+    </div>
+    <div class="footer">
+      <button class="btn-back" onclick="goTo('s2')">← 戻る</button>
+      <button class="btn-next btn-blue" onclick="goTo('s4')">次へ → 最終確認</button>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div id="s4" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="goTo('s3')">← 戻る</button>
+        <span class="header-title">📋 安全日誌</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">4 / 4</span>
+      </div>
+      <div class="header-sub">内容を確認して送信してください</div>
+      <div class="step-bar" id="sb4"></div>
+    </div>
+    <div class="form-body">
+      <div class="sec-label">📋 基本情報</div>
+      <div class="summary-card" id="summary-basic"></div>
+      <div class="sec-label" style="margin-top:8px;">✨ KY安全指示</div>
+      <div class="ky-preview" id="ky-preview">
+        <div class="ky-preview-title">選択済みの安全対策</div>
+        <div id="ky-preview-items" style="font-size:11px;color:#888;">（STEP 2でKY安全対策を選択してください）</div>
+      </div>
+      <div style="font-size:10px;color:#888;background:#f5f5f0;border-radius:6px;padding:8px 10px;">送信すると安全日誌・KY指示書がExcelで出力できるようになります</div>
+    </div>
+    <div class="footer">
+      <button class="btn-back" onclick="goTo('s3')">← 戻る</button>
+      <button class="btn-next btn-green" onclick="submitForm()">送信して完了 ✓</button>
+    </div>
+  </div>
+
+  <!-- 完了 -->
+  <div id="s-done" class="screen">
+    <div class="complete-wrap">
+      <div class="complete-icon">✅</div>
+      <div class="complete-title">安全日誌を送信しました</div>
+      <div class="complete-sub">書類の出力ができるようになりました</div>
+      <div class="output-card" onclick="alert('Excel出力（実装予定）')">
+        <div class="output-icon">📊</div>
+        <div><div class="output-name">安全日誌を出力</div><div class="output-desc">Excel形式でダウンロード</div></div>
+        <span style="font-size:16px;color:#ccc;margin-left:auto;">›</span>
+      </div>
+      <div class="output-card" onclick="alert('KY指示書出力（実装予定）')">
+        <div class="output-icon">⛑</div>
+        <div><div class="output-name">KY安全作業指示書を出力</div><div class="output-desc">Excel形式でダウンロード</div></div>
+        <span style="font-size:16px;color:#ccc;margin-left:auto;">›</span>
+      </div>
+      <button class="btn-wide" style="background:#1a56db;color:#fff;" onclick="goTo('s1')">新しい日誌を作成する</button>
+      <a href="index.html" style="display:block;text-align:center;font-size:13px;color:#888;">ホームへ戻る</a>
+    </div>
+  </div>
+
+</div>
+<script>
+  let selectedWeather='',kyItems=[],selectedKY=new Set();
+  const now=new Date();
+  const days=['日','月','火','水','木','金','土'];
+  document.getElementById('f-date').value=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${days[now.getDay()]}）`;
+
+  function renderSB(step){
+    for(let i=1;i<=4;i++){
+      const el=document.getElementById('sb'+i);if(!el)continue;
+      el.innerHTML='';
+      for(let j=1;j<=4;j++){const d=document.createElement('div');d.className='step-dot'+(j<i?' done':j===i?' active':'');el.appendChild(d);}
+    }
+  }
+  renderSB(1);
+
+  // チェックリスト初期化
+  const clItems=['朝礼・KY活動を実施したか','作業員全員の体調確認を実施したか','保護具（ヘルメット・安全帯・安全靴）の着用確認をしたか','電動工具の絶縁検査・試運転を実施したか','作業エリアの立入禁止区域・養生の設置を確認したか','脚立・足場の点検を実施したか（ガタつき・損傷確認）','作業範囲について他業者・近隣への周知を行ったか'];
+  const clEl=document.getElementById('cl-list');
+  clItems.forEach((text,i)=>{
+    const div=document.createElement('div');
+    div.className='ky-item';div.id=`cl-${i}`;
+    div.innerHTML=`<div style="display:flex;gap:4px;flex-shrink:0;margin-top:2px;"><div class="ky-chk" id="clok-${i}" onclick="setCL(${i},'ok')" style="cursor:pointer;font-size:11px;">良</div><div class="ky-chk" id="clng-${i}" onclick="setCL(${i},'ng')" style="cursor:pointer;font-size:11px;border-color:#d0d0c8;">否</div></div><div class="ky-text">${text}</div>`;
+    clEl.appendChild(div);
+  });
+  const clState={};
+  function setCL(i,val){
+    if(clState[i]===val){delete clState[i];} else {clState[i]=val;}
+    const ok=document.getElementById(`clok-${i}`);
+    const ng=document.getElementById(`clng-${i}`);
+    const item=document.getElementById(`cl-${i}`);
+    ok.className='ky-chk'+(clState[i]==='ok'?' on':'');
+    ng.style.background=clState[i]==='ng'?'#c81e1e':'';
+    ng.style.borderColor=clState[i]==='ng'?'#c81e1e':'#d0d0c8';
+    ng.style.color=clState[i]==='ng'?'#fff':'#1a1a1a';
+    item.style.background=clState[i]==='ok'?'#f0fdf4':clState[i]==='ng'?'#fff7ed':'';
+  }
+
+  function goTo(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0,0);
+    const n=parseInt(id.replace('s',''));
+    if(!isNaN(n))renderSB(n);
+    if(id==='s4')buildSummary();
+  }
+  function selWeather(btn,val){document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');selectedWeather=val;}
+  function next1(){
+    if(!document.getElementById('f-anken').value){alert('案件を選択してください');return;}
+    if(!selectedWeather){alert('天気を選択してください');return;}
+    if(!document.getElementById('f-sekinin').value){alert('作業責任者を入力してください');return;}
+    goTo('s2');
+  }
+  function next2(){
+    if(!document.getElementById('f-sagyo').value){alert('作業内容を入力してください');return;}
+    goTo('s3');
+  }
+
+  async function generateKY(){
+    const sagyo=document.getElementById('f-sagyo').value.trim();
+    if(!sagyo){alert('先に作業内容を入力してください');return;}
+    document.getElementById('ai-gen-btn').disabled=true;
+    document.getElementById('ai-loading').style.display='block';
+    document.getElementById('ky-area').style.display='none';
+    const texts=['作業内容を解析中...','リスクを洗い出し中...','安全対策を生成中...','もうすぐ完了です...'];
+    let li=0;
+    const lt=setInterval(()=>{li=(li+1)%texts.length;document.getElementById('ai-loading-text').textContent=texts[li];},1200);
+    try{
+      const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:`あなたは建設現場の安全管理の専門家です。以下の作業内容に対して、KY活動のための安全対策を10個生成してください。作業内容：${sagyo}。要件：具体的で実践的、学びになる詳しい内容、改修工事現場に即した内容。必ずJSON形式のみで出力すること。{"items":["安全対策1","安全対策2","安全対策3","安全対策4","安全対策5","安全対策6","安全対策7","安全対策8","安全対策9","安全対策10"]}`}]})});
+      const data=await res.json();
+      const text=data.content.map(c=>c.text||'').join('');
+      const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
+      kyItems=parsed.items;
+    }catch(e){
+      kyItems=['作業前に検電器で電源遮断を確認し、施錠・表示を行ってから作業を開始すること','天井内作業は必ず2名1組で行い、単独作業を禁止すること','脚立・足場の使用前点検を実施し、不良品は使用しないこと','配線作業中は手元・足元を常に確認し、転落防止に努めること','幹線引込時は電線の重量に注意し、複数名で分担して腰への負担を軽減すること','工具・資材の落下防止のため、高所では必ず安全ひもを使用すること','狭所作業時は換気を確保し、熱中症・酸欠に注意すること','電動工具使用前に絶縁確認・試運転を行い、受理票を貼ること','他業者との作業範囲を事前に確認し、混在作業での接触事故を防ぐこと','作業終了時は電源・火気を確認し、整理整頓を徹底すること'];
+    }finally{
+      clearInterval(lt);
+      document.getElementById('ai-loading').style.display='none';
+      document.getElementById('ai-gen-btn').disabled=false;
+      selectedKY=new Set();
+      renderKYList();
+    }
+  }
+
+  const nums=['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'];
+  function renderKYList(){
+    const list=document.getElementById('ky-list');
+    list.innerHTML=kyItems.map((item,i)=>{
+      const sel=selectedKY.has(i);
+      return `<div class="ky-item ${sel?'selected':''}" onclick="toggleKY(${i})"><div class="ky-chk ${sel?'on':''}">${sel?'✓':''}</div><div class="ky-num">${nums[i]}</div><div class="ky-text">${item}</div></div>`;
+    }).join('');
+    document.getElementById('ky-area').style.display='block';
+    const n=selectedKY.size;
+    const cnt=document.getElementById('ky-count');
+    cnt.textContent=`${n}個選択中（3〜5個推奨）`;
+    cnt.style.color=n>=3&&n<=5?'#057a55':n>5?'#c81e1e':'#888';
+  }
+  function toggleKY(i){if(selectedKY.has(i))selectedKY.delete(i);else selectedKY.add(i);renderKYList();}
+
+  function buildSummary(){
+    const anken=document.getElementById('f-anken').value;
+    const date=document.getElementById('f-date').value;
+    const temp=document.getElementById('f-temp').value;
+    const sekinin=document.getElementById('f-sekinin').value;
+    const sagyo=document.getElementById('f-sagyo').value;
+    document.getElementById('summary-basic').innerHTML=`
+      <div class="s-row"><span class="s-label">案件</span><span class="s-val">${anken}</span></div>
+      <div class="s-row"><span class="s-label">作業日</span><span class="s-val">${date}</span></div>
+      <div class="s-row"><span class="s-label">天気・気温</span><span class="s-val">${selectedWeather} ${temp?temp+'℃':''}</span></div>
+      <div class="s-row"><span class="s-label">作業責任者</span><span class="s-val">${sekinin}</span></div>
+      <div class="s-row"><span class="s-label">作業内容</span><span class="s-val">${sagyo.substring(0,30)}${sagyo.length>30?'...':''}</span></div>
+    `;
+    if(selectedKY.size===0){
+      document.getElementById('ky-preview-items').innerHTML='<span style="color:#888;">（STEP 2でKY安全対策を選択してください）</span>';
+    }else{
+      document.getElementById('ky-preview-items').innerHTML=[...selectedKY].sort().map(i=>`<div class="ky-preview-item"><span>${nums[i]}</span><span>${kyItems[i]}</span></div>`).join('');
+    }
+  }
+  function submitForm(){goTo('s-done');}
+</script>
+</body>
+</html>

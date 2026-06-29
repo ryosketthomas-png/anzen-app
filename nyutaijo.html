@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>入退場記録 | 安全書類管理</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 14px; }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .header { background: #fff; border-bottom: 0.5px solid #e0e0d8; padding: 10px 16px; position: sticky; top: 0; z-index: 10; }
+  .header-top { display: flex; align-items: center; gap: 8px; }
+  .back-btn { background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 6px; padding: 4px 8px; font-size: 11px; color: #666; cursor: pointer; text-decoration: none; }
+  .header-title { font-size: 14px; font-weight: 700; }
+  .header-sub { font-size: 10px; color: #888; margin-top: 3px; }
+  .body { padding: 16px; }
+  .date-banner { background: #eff6ff; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .date-label { font-size: 11px; color: #1d4ed8; }
+  .date-val { font-size: 15px; font-weight: 700; color: #1d4ed8; }
+  .anken-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  select.anken { width: 100%; padding: 9px 10px; font-size: 13px; border: 0.5px solid #d0d0c8; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; margin-bottom: 14px; }
+  .action-cards { display: flex; gap: 10px; margin-bottom: 16px; }
+  .action-card { flex: 1; border-radius: 12px; padding: 14px 12px; cursor: pointer; text-align: center; border: 2px solid; transition: transform 0.1s; }
+  .action-card:active { transform: scale(0.97); }
+  .action-card.in { background: #dcfce7; border-color: #057a55; }
+  .action-card.out { background: #fee2e2; border-color: #c81e1e; }
+  .action-icon { font-size: 22px; margin-bottom: 4px; }
+  .action-label { font-size: 13px; font-weight: 700; }
+  .action-card.in .action-label { color: #057a55; }
+  .action-card.out .action-label { color: #c81e1e; }
+  .action-sub { font-size: 10px; margin-top: 2px; }
+  .action-card.in .action-sub { color: #065f46; }
+  .action-card.out .action-sub { color: #991b1b; }
+  .sec-title { font-size: 12px; font-weight: 700; color: #666; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .count-badge { font-size: 11px; background: #eff6ff; color: #1d4ed8; padding: 2px 8px; border-radius: 99px; font-weight: 700; }
+  .log-list { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+  .log-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 0.5px solid #e0e0d8; }
+  .log-item:last-child { border-bottom: none; }
+  .log-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .log-avatar.in { background: #dcfce7; color: #057a55; }
+  .log-avatar.out { background: #fee2e2; color: #c81e1e; }
+  .log-info { flex: 1; }
+  .log-name { font-size: 13px; font-weight: 600; }
+  .log-sub { font-size: 10px; color: #888; margin-top: 1px; }
+  .log-right { text-align: right; }
+  .log-time { font-size: 12px; font-weight: 600; margin-top: 3px; }
+  .badge-in { background: #057a55; color: #fff; font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 700; display: inline-block; }
+  .badge-out { background: #c81e1e; color: #fff; font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 700; display: inline-block; }
+  .empty-log { padding: 20px; text-align: center; font-size: 12px; color: #888; }
+  .kt-table { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+  .kt-header { display: grid; grid-template-columns: 1fr 44px 44px 44px; padding: 6px 12px; background: #f5f5f0; border-bottom: 0.5px solid #e0e0d8; }
+  .kt-header span { font-size: 10px; color: #888; font-weight: 700; text-align: center; }
+  .kt-header span:first-child { text-align: left; }
+  .kt-row { display: grid; grid-template-columns: 1fr 44px 44px 44px; padding: 8px 12px; border-bottom: 0.5px solid #e0e0d8; align-items: center; }
+  .kt-row:last-child { border-bottom: none; }
+  .kt-row.total { background: #f5f5f0; }
+  .kt-name { font-size: 12px; font-weight: 600; }
+  .kt-num { font-size: 13px; font-weight: 700; text-align: center; }
+  .num-in { color: #057a55; }
+  .num-out { color: #c81e1e; }
+  .num-cur { color: #1a56db; }
+  .form-body { padding: 16px; }
+  .field { margin-bottom: 12px; }
+  .field-label { font-size: 11px; color: #888; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+  .req { color: #dc2626; font-size: 10px; }
+  .search-wrap { position: relative; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #888; pointer-events: none; }
+  .search-input { width: 100%; padding: 9px 10px 9px 32px; font-size: 13px; border: 1.5px solid #1a56db; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; }
+  .search-input:focus { outline: none; }
+  .search-hint { font-size: 10px; color: #888; margin-top: 4px; }
+  .candidate-list { background: #fff; border: 0.5px solid #d0d0c8; border-radius: 10px; overflow: hidden; margin-top: 6px; }
+  .candidate-item { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-bottom: 0.5px solid #e0e0d8; cursor: pointer; transition: background 0.1s; }
+  .candidate-item:last-child { border-bottom: none; }
+  .candidate-item:hover { background: #f5f5f0; }
+  .c-avatar { width: 36px; height: 36px; border-radius: 50%; background: #eff6ff; color: #1d4ed8; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .c-name { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+  .c-sub { font-size: 10px; color: #888; margin-top: 2px; }
+  .no-result { padding: 18px; text-align: center; font-size: 11px; color: #888; }
+  .highlight { color: #1a56db; font-weight: 700; }
+  .selected-card { background: #eff6ff; border: 1.5px solid #1a56db; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+  .sel-avatar { width: 36px; height: 36px; border-radius: 50%; background: #1a56db; color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sel-name { font-size: 13px; font-weight: 700; color: #1a56db; }
+  .sel-sub { font-size: 10px; color: #1a56db; opacity: 0.8; margin-top: 1px; }
+  .change-btn { margin-left: auto; font-size: 11px; color: #888; background: #fff; border: 0.5px solid #d0d0c8; border-radius: 99px; padding: 3px 10px; cursor: pointer; white-space: nowrap; }
+  .type-row { display: flex; gap: 10px; margin-top: 4px; }
+  .type-btn { flex: 1; padding: 13px; font-size: 13px; font-weight: 700; border-radius: 10px; border: 2px solid #d0d0c8; background: #f5f5f0; color: #888; cursor: pointer; text-align: center; transition: all 0.2s; }
+  .type-btn.in-sel { background: #dcfce7; border-color: #057a55; color: #057a55; }
+  .type-btn.out-sel { background: #fee2e2; border-color: #c81e1e; color: #c81e1e; }
+  input.auto { background: #f5f5f0; color: #888; border: 0.5px solid #d0d0c8; border-radius: 8px; padding: 8px 10px; font-size: 13px; width: 100%; font-family: inherit; }
+  input.biko-inp { width: 100%; padding: 8px 10px; font-size: 13px; border: 0.5px solid #d0d0c8; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; }
+  .footer { padding: 10px 16px 18px; border-top: 0.5px solid #e0e0d8; background: #fff; position: sticky; bottom: 0; display: flex; gap: 8px; }
+  .btn-back { background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 10px; padding: 11px 16px; font-size: 13px; color: #666; cursor: pointer; }
+  .btn-submit { flex: 1; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; }
+  .btn-green { background: #057a55; color: #fff; }
+  .btn-red { background: #c81e1e; color: #fff; }
+  .btn-gray { background: #f5f5f0; color: #888; border: 0.5px solid #d0d0c8; }
+  .btn-submit:disabled { opacity: 0.35; cursor: not-allowed; }
+  .complete-wrap { padding: 24px 16px; text-align: center; }
+  .complete-icon { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 14px; }
+  .complete-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .complete-sub { font-size: 11px; color: #888; margin-bottom: 18px; line-height: 1.6; }
+  .complete-card { background: #f5f5f0; border: 0.5px solid #e0e0d8; border-radius: 10px; padding: 12px 14px; text-align: left; margin-bottom: 16px; }
+  .c-row { display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 0.5px solid #e0e0d8; }
+  .c-row:last-child { border-bottom: none; }
+  .c-label { color: #888; }
+  .c-val { color: #1a1a1a; font-weight: 600; }
+  .btn-wide { width: 100%; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP -->
+  <div id="s-top" class="screen active">
+    <div class="header">
+      <div class="header-top">
+        <a href="index.html" class="back-btn">← ホーム</a>
+        <span class="header-title">📋 入退場記録</span>
+      </div>
+      <div class="header-sub">本日の入退場を記録・確認できます</div>
+    </div>
+    <div class="body">
+      <div class="date-banner">
+        <div class="date-label">作業日</div>
+        <div class="date-val" id="today-date"></div>
+      </div>
+      <div class="anken-label">案件を選択</div>
+      <select class="anken" id="sel-anken" onchange="updateLog()">
+        <option value="">選択してください</option>
+        <option value="yodo">淀屋橋ゲートタワー工事</option>
+        <option value="namba">なんばパークス改修工事</option>
+      </select>
+      <div class="action-cards">
+        <div class="action-card in" onclick="startRecord('入場')">
+          <div class="action-icon">✅</div>
+          <div class="action-label">入場記録</div>
+          <div class="action-sub">作業員の入場を登録</div>
+        </div>
+        <div class="action-card out" onclick="startRecord('退場')">
+          <div class="action-icon">🚪</div>
+          <div class="action-label">退場記録</div>
+          <div class="action-sub">作業員の退場を登録</div>
+        </div>
+      </div>
+      <div class="sec-title"><span>工種別 現在人数</span><span class="count-badge" id="total-count">在場 0名</span></div>
+      <div class="kt-table" id="kt-area">
+        <div class="kt-header"><span>工種</span><span>入場</span><span>退場</span><span>現在</span></div>
+        <div class="empty-log">案件を選択してください</div>
+      </div>
+      <div class="sec-title"><span>本日の記録</span></div>
+      <div class="log-list" id="log-area"><div class="empty-log">案件を選択してください</div></div>
+    </div>
+  </div>
+
+  <!-- フォーム -->
+  <div id="s-form" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="goTop()">← 戻る</button>
+        <span class="header-title" id="form-title">入退場記録</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;" id="form-anken"></span>
+      </div>
+      <div class="header-sub">作業員を検索して記録してください</div>
+    </div>
+    <div class="form-body">
+      <div class="field">
+        <div class="field-label">記録の種別 <span class="req">必須</span></div>
+        <div class="type-row">
+          <button class="type-btn" id="type-in" onclick="selType('入場')">✅ 入場</button>
+          <button class="type-btn" id="type-out" onclick="selType('退場')">🚪 退場</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">作業員を検索 <span class="req">必須</span></div>
+        <div id="search-area">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" id="search-input" type="text" placeholder="苗字・名前・ふりがな で検索" autocomplete="off" oninput="searchWorker(this.value)">
+          </div>
+          <div class="search-hint">漢字・ひらがな・カタカナどれでも検索できます</div>
+          <div id="candidate-list" class="candidate-list" style="display:none;"></div>
+        </div>
+        <div id="selected-area" style="display:none;">
+          <div class="selected-card">
+            <div class="sel-avatar" id="sel-avatar"></div>
+            <div style="flex:1;min-width:0;"><div class="sel-name" id="sel-name"></div><div class="sel-sub" id="sel-sub"></div></div>
+            <button class="change-btn" onclick="clearSelected()">変更</button>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">記録日時 <span style="font-size:9px;background:#dcfce7;color:#166534;padding:1px 5px;border-radius:99px;">自動</span></div>
+        <input class="auto" type="text" id="record-time" readonly>
+      </div>
+      <div class="field">
+        <div class="field-label">備考（任意）</div>
+        <input type="text" id="biko" class="biko-inp" placeholder="例：遅刻・早退・体調不良など">
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn-back" onclick="goTop()">← 戻る</button>
+      <button class="btn-submit btn-gray" id="btn-record" disabled onclick="submitRecord()">作業員と種別を選択してください</button>
+    </div>
+  </div>
+
+  <!-- 完了 -->
+  <div id="s-done" class="screen">
+    <div class="complete-wrap">
+      <div class="complete-icon" id="done-icon"></div>
+      <div class="complete-title" id="done-title"></div>
+      <div class="complete-sub" id="done-sub"></div>
+      <div class="complete-card" id="done-summary"></div>
+      <button class="btn-wide" id="btn-continue" onclick="continueRecord()">続けて記録する</button>
+      <button class="btn-wide" style="background:#f5f5f0;border:0.5px solid #d0d0c8;color:#666;" onclick="goTop()">一覧に戻る</button>
+    </div>
+  </div>
+
+</div>
+<script>
+  const workers=[
+    {id:1,name:'辻本 大樹',kana:'つじもと だいき',kaisha:'好竹エンジニアリング',jisu:'1次',shokushu:'電工'},
+    {id:2,name:'佐藤 友和',kana:'さとう ともかず',kaisha:'好竹エンジニアリング',jisu:'1次',shokushu:'現場管理'},
+    {id:3,name:'加藤 哲也',kana:'かとう てつや',kaisha:'好竹エンジニアリング',jisu:'1次',shokushu:'電工'},
+    {id:4,name:'﨑畑 卓',kana:'さきはた すぐる',kaisha:'好竹エンジニアリング',jisu:'1次',shokushu:'電工'},
+    {id:5,name:'山田 太陽',kana:'やまだ ひかる',kaisha:'好竹エンジニアリング',jisu:'1次',shokushu:'電工'},
+    {id:6,name:'山下 国学',kana:'やました くにのり',kaisha:'山下電気',jisu:'2次',shokushu:'電工'},
+    {id:7,name:'田中 一郎',kana:'たなか いちろう',kaisha:'協力会社C',jisu:'3次',shokushu:'内装'},
+    {id:8,name:'鈴木 健太',kana:'すずき けんた',kaisha:'協力会社C',jisu:'3次',shokushu:'内装'},
+  ];
+  let logs=[],selectedWorker=null,currentType='';
+  const now=new Date();
+  const days=['日','月','火','水','木','金','土'];
+  const fmt=d=>`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
+  document.getElementById('today-date').textContent=fmt(now);
+  function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+  function goTop(){show('s-top');updateLog();}
+  function startRecord(type){
+    const anken=document.getElementById('sel-anken').value;
+    if(!anken){alert('先に案件を選択してください');return;}
+    currentType=type;selectedWorker=null;
+    document.getElementById('form-title').textContent=type==='入場'?'✅ 入場記録':'🚪 退場記録';
+    document.getElementById('form-anken').textContent=document.getElementById('sel-anken').options[document.getElementById('sel-anken').selectedIndex].text;
+    document.getElementById('search-input').value='';
+    document.getElementById('candidate-list').style.display='none';
+    document.getElementById('candidate-list').innerHTML='';
+    document.getElementById('search-area').style.display='block';
+    document.getElementById('selected-area').style.display='none';
+    document.getElementById('biko').value='';
+    document.getElementById('type-in').className='type-btn'+(type==='入場'?' in-sel':'');
+    document.getElementById('type-out').className='type-btn'+(type==='退場'?' out-sel':'');
+    updateRecordTime();updateSubmitBtn();show('s-form');
+    setTimeout(()=>document.getElementById('search-input').focus(),150);
+  }
+  function selType(type){
+    currentType=type;
+    document.getElementById('type-in').className='type-btn'+(type==='入場'?' in-sel':'');
+    document.getElementById('type-out').className='type-btn'+(type==='退場'?' out-sel':'');
+    document.getElementById('form-title').textContent=type==='入場'?'✅ 入場記録':'🚪 退場記録';
+    updateSubmitBtn();
+  }
+  function updateRecordTime(){
+    const n=new Date();
+    document.getElementById('record-time').value=`${fmt(n)} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+  }
+  function searchWorker(val){
+    const list=document.getElementById('candidate-list');
+    if(!val.trim()){list.style.display='none';list.innerHTML='';return;}
+    const q=val.toLowerCase();
+    const matched=workers.filter(w=>w.name.includes(val)||w.kana.includes(q)||w.name.replace(/\s/g,'').includes(val.replace(/\s/g,''))||w.kaisha.includes(val));
+    if(matched.length===0){
+      list.innerHTML='<div class="no-result">該当する作業員が見つかりません<br><span style="font-size:10px;">新規入場登録が必要な場合があります</span></div>';
+    } else {
+      const esc=val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      list.innerHTML=matched.map(w=>{
+        const hi=w.name.replace(new RegExp(esc,'g'),s=>`<span class="highlight">${s}</span>`);
+        return `<div class="candidate-item" onclick="selectWorker(${w.id})"><div class="c-avatar">${w.name.charAt(0)}</div><div><div class="c-name">${hi}</div><div class="c-sub">${w.kaisha} / ${w.shokushu} / ${w.jisu}</div></div></div>`;
+      }).join('');
+    }
+    list.style.display='block';
+  }
+  function selectWorker(id){
+    selectedWorker=workers.find(w=>w.id===id);
+    document.getElementById('search-area').style.display='none';
+    document.getElementById('selected-area').style.display='block';
+    document.getElementById('sel-avatar').textContent=selectedWorker.name.charAt(0);
+    document.getElementById('sel-name').textContent=selectedWorker.name;
+    document.getElementById('sel-sub').textContent=`${selectedWorker.kaisha} / ${selectedWorker.shokushu} / ${selectedWorker.jisu}`;
+    updateRecordTime();updateSubmitBtn();
+  }
+  function clearSelected(){
+    selectedWorker=null;
+    document.getElementById('search-area').style.display='block';
+    document.getElementById('selected-area').style.display='none';
+    document.getElementById('search-input').value='';
+    document.getElementById('candidate-list').style.display='none';
+    document.getElementById('candidate-list').innerHTML='';
+    updateSubmitBtn();
+    setTimeout(()=>document.getElementById('search-input').focus(),100);
+  }
+  function updateSubmitBtn(){
+    const btn=document.getElementById('btn-record');
+    const ok=selectedWorker&&currentType;
+    btn.disabled=!ok;
+    if(ok){btn.className='btn-submit '+(currentType==='入場'?'btn-green':'btn-red');btn.textContent=`${currentType}を記録する`;}
+    else{btn.className='btn-submit btn-gray';btn.textContent='作業員と種別を選択してください';}
+  }
+  function submitRecord(){
+    const n=new Date();
+    const timeStr=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+    logs.push({workerId:selectedWorker.id,type:currentType,time:timeStr});
+    const isIn=currentType==='入場';
+    document.getElementById('done-icon').className='complete-icon';
+    document.getElementById('done-icon').style.background=isIn?'#dcfce7':'#fee2e2';
+    document.getElementById('done-icon').textContent=isIn?'✅':'🚪';
+    document.getElementById('done-title').textContent=`${currentType}を記録しました`;
+    document.getElementById('done-sub').textContent=`${selectedWorker.name} さんの${currentType}を記録しました`;
+    document.getElementById('done-summary').innerHTML=`
+      <div class="c-row"><span class="c-label">氏名</span><span class="c-val">${selectedWorker.name}</span></div>
+      <div class="c-row"><span class="c-label">所属</span><span class="c-val">${selectedWorker.kaisha} / ${selectedWorker.jisu}</span></div>
+      <div class="c-row"><span class="c-label">職種</span><span class="c-val">${selectedWorker.shokushu}</span></div>
+      <div class="c-row"><span class="c-label">種別</span><span class="c-val">${currentType}</span></div>
+      <div class="c-row"><span class="c-label">時刻</span><span class="c-val">${timeStr}</span></div>
+    `;
+    const cb=document.getElementById('btn-continue');
+    cb.style.background=isIn?'#057a55':'#c81e1e';cb.style.color='#fff';
+    cb.textContent=`続けて${currentType}を記録する`;
+    show('s-done');
+  }
+  function continueRecord(){startRecord(currentType);}
+  function updateLog(){
+    const anken=document.getElementById('sel-anken').value;
+    const logArea=document.getElementById('log-area');
+    const ktArea=document.getElementById('kt-area');
+    const totalCount=document.getElementById('total-count');
+    if(!anken){
+      logArea.innerHTML='<div class="empty-log">案件を選択してください</div>';
+      ktArea.innerHTML='<div class="kt-header"><span>工種</span><span>入場</span><span>退場</span><span>現在</span></div><div class="empty-log">案件を選択してください</div>';
+      totalCount.textContent='在場 0名';return;
+    }
+    if(logs.length===0){
+      logArea.innerHTML='<div class="empty-log">まだ記録がありません</div>';
+      ktArea.innerHTML='<div class="kt-header"><span>工種</span><span>入場</span><span>退場</span><span>現在</span></div><div class="empty-log">記録がありません</div>';
+      totalCount.textContent='在場 0名';return;
+    }
+    let html='';
+    [...logs].reverse().forEach(log=>{
+      const w=workers.find(w=>w.id===log.workerId);if(!w)return;
+      const cls=log.type==='入場'?'in':'out';
+      const badge=log.type==='入場'?'<span class="badge-in">入場</span>':'<span class="badge-out">退場</span>';
+      html+=`<div class="log-item"><div class="log-avatar ${cls}">${w.name.charAt(0)}</div><div class="log-info"><div class="log-name">${w.name}</div><div class="log-sub">${w.kaisha} / ${w.shokushu}</div></div><div class="log-right">${badge}<div class="log-time">${log.time}</div></div></div>`;
+    });
+    logArea.innerHTML=html;
+    const sm={};
+    logs.forEach(log=>{const w=workers.find(w=>w.id===log.workerId);if(!w)return;if(!sm[w.shokushu])sm[w.shokushu]={in:0,out:0};if(log.type==='入場')sm[w.shokushu].in++;else sm[w.shokushu].out++;});
+    let ti=0,to=0;
+    let kt='<div class="kt-header"><span>工種</span><span>入場</span><span>退場</span><span>現在</span></div>';
+    Object.entries(sm).forEach(([s,c])=>{const cur=c.in-c.out;ti+=c.in;to+=c.out;kt+=`<div class="kt-row"><div><div class="kt-name">${s}</div></div><div class="kt-num num-in">${c.in}</div><div class="kt-num num-out">${c.out}</div><div class="kt-num num-cur">${cur}</div></div>`;});
+    kt+=`<div class="kt-row total"><div><div class="kt-name" style="color:#1a56db;">合計</div></div><div class="kt-num num-in" style="font-size:15px;">${ti}</div><div class="kt-num num-out" style="font-size:15px;">${to}</div><div class="kt-num num-cur" style="font-size:15px;">${ti-to}</div></div>`;
+    ktArea.innerHTML=kt;
+    totalCount.textContent=`在場 ${ti-to}名`;
+  }
+</script>
+</body>
+</html>

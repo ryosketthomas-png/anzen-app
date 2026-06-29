@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>承認フロー | 安全書類管理</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 14px; }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .header { background: #fff; border-bottom: 0.5px solid #e0e0d8; padding: 10px 16px; position: sticky; top: 0; z-index: 10; }
+  .header-top { display: flex; align-items: center; gap: 8px; }
+  .back-btn { background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 6px; padding: 4px 8px; font-size: 11px; color: #666; cursor: pointer; text-decoration: none; }
+  .header-title { font-size: 14px; font-weight: 700; }
+  .header-sub { font-size: 10px; color: #888; margin-top: 3px; }
+  .body { padding: 16px; }
+  .info-box { font-size: 11px; line-height: 1.6; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; }
+  .info-blue { background: #eff6ff; color: #1d4ed8; border: 0.5px solid #93c5fd; }
+  .info-purple { background: #f5f3ff; color: #5b21b6; border: 0.5px solid #c4b5fd; }
+  .info-yellow { background: #fef3c7; color: #92400e; border: 0.5px solid #fcd34d; }
+  .mode-cards { display: flex; flex-direction: column; gap: 10px; }
+  .mode-card { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 12px; padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.15s; text-decoration: none; }
+  .mode-card:hover { border-color: #93c5fd; }
+  .mode-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .mode-name { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+  .mode-desc { font-size: 11px; color: #888; line-height: 1.4; }
+  .mode-arrow { font-size: 18px; color: #ccc; margin-left: auto; }
+  .sec-label { font-size: 11px; font-weight: 700; color: #666; background: #f5f5f0; border-left: 3px solid #1a56db; padding: 4px 10px; border-radius: 0 4px 4px 0; margin-bottom: 10px; margin-top: 14px; }
+  .nisshi-card { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+  .nisshi-date { font-size: 13px; font-weight: 700; }
+  .nisshi-anken { font-size: 10px; color: #888; margin-top: 2px; }
+  .nisshi-meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .meta-tag { font-size: 10px; background: #f5f5f0; border: 0.5px solid #e0e0d8; border-radius: 99px; padding: 2px 8px; color: #666; }
+  .status-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; }
+  .status-done { background: #dcfce7; color: #057a55; }
+  .status-wait { background: #fef3c7; color: #92400e; }
+  .status-none { background: #f5f5f0; color: #888; border: 0.5px solid #d0d0c8; }
+  .status-approved { background: #f5f3ff; color: #5b21b6; }
+  .approve-btn { padding: 7px 14px; font-size: 12px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; background: #5145cd; color: #fff; }
+  .approval-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-top: 0.5px solid #e0e0d8; margin-top: 6px; }
+  .approval-row-label { font-size: 11px; color: #888; }
+  .approver-list { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+  .approver-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 0.5px solid #e0e0d8; }
+  .approver-item:last-child { border-bottom: none; }
+  .approver-avatar { width: 34px; height: 34px; border-radius: 50%; background: #f5f3ff; color: #5b21b6; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .approver-name { font-size: 13px; font-weight: 600; }
+  .approver-role { font-size: 10px; color: #888; margin-top: 1px; }
+  .approver-del { margin-left: auto; font-size: 11px; color: #888; background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+  .add-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .add-input { flex: 1; padding: 8px 10px; font-size: 13px; border: 0.5px solid #d0d0c8; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; }
+  .add-input:focus { outline: none; border-color: #1a56db; }
+  .add-sel { padding: 8px 10px; font-size: 12px; border: 0.5px solid #d0d0c8; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; }
+  .add-btn { padding: 8px 14px; font-size: 12px; font-weight: 700; background: #5145cd; color: #fff; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+  input[type="text"] { width: 100%; padding: 8px 10px; font-size: 13px; border: 0.5px solid #d0d0c8; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; }
+  input:focus { outline: none; border-color: #1a56db; }
+  .sign-area { background: #f5f5f0; border: 0.5px dashed #d0d0c8; border-radius: 8px; height: 70px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .sign-done { background: #eff6ff; border: 1px solid #93c5fd; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+  .complete-wrap { padding: 24px 16px; text-align: center; }
+  .complete-icon { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 14px; }
+  .btn-wide { width: 100%; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; margin-bottom: 8px; }
+  .footer { padding: 10px 16px 18px; border-top: 0.5px solid #e0e0d8; background: #fff; position: sticky; bottom: 0; display: flex; gap: 8px; }
+  .btn-back-f { background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 10px; padding: 11px 16px; font-size: 13px; color: #666; cursor: pointer; }
+  .btn-primary { flex: 1; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; }
+  .tag-purple { background: #f5f3ff; color: #5b21b6; border-radius: 99px; font-size: 10px; padding: 2px 8px; font-weight: 700; display: inline-block; }
+  .tag-blue { background: #eff6ff; color: #1d4ed8; border-radius: 99px; font-size: 10px; padding: 2px 8px; font-weight: 700; display: inline-block; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP -->
+  <div id="s-top" class="screen active">
+    <div class="header">
+      <div class="header-top">
+        <a href="index.html" class="back-btn">← ホーム</a>
+        <span class="header-title">🔏 承認フロー</span>
+      </div>
+      <div class="header-sub">安全書類管理システム</div>
+    </div>
+    <div class="body">
+      <div class="info-box info-blue">担当者がその場でチェックして送信 → 主任・上司が後から承認する2段階フローです</div>
+      <div class="mode-cards">
+        <div class="mode-card" onclick="show('s-tantou')">
+          <div class="mode-icon" style="background:#eff6ff;">👤</div>
+          <div><div class="mode-name">担当者チェック</div><div class="mode-desc">チェックリストを確認してその場でサイン・送信</div></div>
+          <span class="mode-arrow">›</span>
+        </div>
+        <div class="mode-card" onclick="show('s-approver')">
+          <div class="mode-icon" style="background:#f5f3ff;">👑</div>
+          <div><div class="mode-name">主任・上司 承認画面</div><div class="mode-desc">後から承認待ち一覧を確認して承認する</div></div>
+          <span class="mode-arrow">›</span>
+        </div>
+        <div class="mode-card" onclick="show('s-admin')">
+          <div class="mode-icon" style="background:#fef3c7;">⚙️</div>
+          <div><div class="mode-name">管理者設定</div><div class="mode-desc">案件ごとに承認者（主任・上司）を登録・管理</div></div>
+          <span class="mode-arrow">›</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 担当者チェック -->
+  <div id="s-tantou" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="show('s-top')">← 戻る</button>
+        <span class="header-title">👤 担当者チェック</span>
+      </div>
+      <div class="header-sub">チェックリストを確認してサインしてください</div>
+    </div>
+    <div class="body">
+      <div class="info-box info-blue">チェック完了後に送信すると、承認者（主任・上司）に通知が届きます。承認は後から行われます。</div>
+      <div class="sec-label" style="margin-top:0;">✅ 本日のチェック結果（安全日誌より）</div>
+      <div style="background:#fff;border:0.5px solid #e0e0d8;border-radius:10px;overflow:hidden;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:0.5px solid #e0e0d8;background:#f0fdf4;"><div style="width:22px;height:22px;border-radius:4px;background:#057a55;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">良</div><div style="font-size:12px;">朝礼・KY活動を実施したか</div></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:0.5px solid #e0e0d8;background:#f0fdf4;"><div style="width:22px;height:22px;border-radius:4px;background:#057a55;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">良</div><div style="font-size:12px;">保護具の着用確認をしたか</div></div>
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-bottom:0.5px solid #e0e0d8;background:#fff7ed;"><div style="width:22px;height:22px;border-radius:4px;background:#c81e1e;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">否</div><div style="font-size:12px;color:#c81e1e;">電動工具の絶縁検査を実施したか<br><span style="font-size:10px;color:#92400e;">→ 絶縁不良1本を発見・使用中止対応済み</span></div></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#f0fdf4;"><div style="width:22px;height:22px;border-radius:4px;background:#057a55;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">良</div><div style="font-size:12px;">作業エリアの養生・立入禁止設置を確認したか</div></div>
+      </div>
+      <div class="sec-label">📝 担当者サイン</div>
+      <div style="margin-bottom:10px;"><input type="text" id="tantou-name" placeholder="担当者氏名を入力"></div>
+      <div id="sign-empty-t" class="sign-area" onclick="doSign()"><span style="font-size:11px;color:#888;">✍ ここにサインしてください（タップ）</span></div>
+      <div id="sign-done-t" class="sign-done" style="display:none;">
+        <span style="font-size:20px;">✅</span>
+        <div><div style="font-size:13px;font-weight:700;color:#1d4ed8;" id="sign-done-name-t"></div><div style="font-size:10px;color:#888;" id="sign-done-time-t"></div></div>
+      </div>
+      <div class="info-box info-yellow" style="margin-top:12px;">⚠️ 「否」の項目が1件あります。送信後、承認者に内容が通知されます。</div>
+    </div>
+    <div class="footer">
+      <button class="btn-back-f" onclick="show('s-top')">← 戻る</button>
+      <button class="btn-primary" style="background:#057a55;color:#fff;" onclick="submitTantou()">送信して完了 →</button>
+    </div>
+  </div>
+
+  <!-- 担当者送信完了 -->
+  <div id="s-tantou-done" class="screen">
+    <div class="body" style="padding-top:40px;text-align:center;">
+      <div style="width:64px;height:64px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 14px;">✅</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:6px;">送信が完了しました</div>
+      <div style="font-size:11px;color:#888;margin-bottom:20px;line-height:1.6;">承認者に通知が送られました。<br>承認は主任・上司が後から行います。</div>
+      <div style="background:#fff;border:0.5px solid #e0e0d8;border-radius:10px;padding:14px;text-align:left;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">承認待ち状況</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;border-bottom:0.5px solid #e0e0d8;"><span style="color:#888;">担当者チェック</span><span class="status-badge status-done">✅ 完了</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;"><span style="color:#888;">主任・上司 最終承認</span><span class="status-badge status-wait">⏳ 承認待ち</span></div>
+      </div>
+      <button class="btn-wide" style="background:#1a56db;color:#fff;" onclick="show('s-top')">トップへ戻る</button>
+    </div>
+  </div>
+
+  <!-- 承認者一覧 -->
+  <div id="s-approver" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="show('s-top')">← 戻る</button>
+        <span class="header-title">👑 承認一覧</span>
+      </div>
+      <div class="header-sub">承認待ちの安全日誌を確認・承認できます</div>
+    </div>
+    <div class="body">
+      <div class="info-box info-purple">承認者としてログイン中：<strong>佐藤 友和（主任）</strong></div>
+      <div class="sec-label" style="margin-top:0;">⏳ 承認待ち（2件）</div>
+      <div class="nisshi-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div><div class="nisshi-date">2026年6月29日（月）</div><div class="nisshi-anken">淀屋橋ゲートタワー工事</div></div>
+          <span class="status-badge status-wait">⏳ 承認待ち</span>
+        </div>
+        <div class="nisshi-meta"><span class="meta-tag">☀️ 晴れ 28℃</span><span class="meta-tag">👷 在場8名</span><span class="meta-tag">⚠️ 否1件</span></div>
+        <div style="font-size:11px;color:#888;margin-bottom:8px;">担当者：辻本 大樹　チェック完了 09:15</div>
+        <div style="font-size:11px;background:#fff7ed;border:0.5px solid #fcd34d;border-radius:6px;padding:7px 10px;margin-bottom:10px;color:#92400e;">⚠️ 否の項目：電動工具の絶縁検査（絶縁不良1本・使用中止対応済み）</div>
+        <div class="approval-row"><span class="approval-row-label">最終承認</span><button class="approve-btn" onclick="doApprove(this,'2026年6月29日')">この日誌を承認する</button></div>
+      </div>
+      <div class="nisshi-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div><div class="nisshi-date">2026年6月28日（日）</div><div class="nisshi-anken">淀屋橋ゲートタワー工事</div></div>
+          <span class="status-badge status-wait">⏳ 承認待ち</span>
+        </div>
+        <div class="nisshi-meta"><span class="meta-tag">⛅ 曇り 25℃</span><span class="meta-tag">👷 在場6名</span><span class="meta-tag">✅ 否なし</span></div>
+        <div style="font-size:11px;color:#888;margin-bottom:10px;">担当者：辻本 大樹　チェック完了 17:30</div>
+        <div class="approval-row"><span class="approval-row-label">最終承認</span><button class="approve-btn" onclick="doApprove(this,'2026年6月28日')">この日誌を承認する</button></div>
+      </div>
+      <div class="sec-label">✅ 承認済み</div>
+      <div class="nisshi-card" style="opacity:0.75;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div><div class="nisshi-date">2026年6月27日（土）</div><div class="nisshi-anken">淀屋橋ゲートタワー工事</div></div>
+          <span class="status-badge status-approved">🔏 承認済み</span>
+        </div>
+        <div class="approval-row"><span class="approval-row-label">承認者</span><span style="font-size:12px;color:#5b21b6;font-weight:700;">佐藤 友和　2026/06/27 18:05</span></div>
+      </div>
+      <div class="sec-label">⚠️ 承認者未設定</div>
+      <div class="nisshi-card" style="border-color:#fcd34d;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div><div class="nisshi-date">2026年6月29日（月）</div><div class="nisshi-anken">なんばパークス改修工事</div></div>
+          <span class="status-badge status-none">— 未設定</span>
+        </div>
+        <div style="font-size:11px;color:#888;margin-bottom:6px;">担当者チェック完了済み</div>
+        <div class="info-box info-yellow" style="margin-bottom:0;">この案件の承認者が設定されていません。管理者に設定を依頼してください。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 承認完了 -->
+  <div id="s-approve-done" class="screen">
+    <div class="body" style="padding-top:40px;text-align:center;">
+      <div style="width:64px;height:64px;border-radius:50%;background:#f5f3ff;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 14px;">🔏</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:6px;">承認が完了しました</div>
+      <div style="font-size:11px;color:#888;margin-bottom:20px;line-height:1.6;"><span id="approved-date"></span> の安全日誌を承認しました。<br>担当者に通知が送られます。</div>
+      <div style="background:#fff;border:0.5px solid #e0e0d8;border-radius:10px;padding:14px;text-align:left;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:0.5px solid #e0e0d8;"><span style="color:#888;">担当者チェック</span><span class="status-badge status-done">✅ 完了</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;"><span style="color:#888;">最終承認</span><span class="status-badge status-approved">🔏 承認済み</span></div>
+      </div>
+      <button class="btn-wide" style="background:#5145cd;color:#fff;" onclick="show('s-approver')">承認一覧に戻る</button>
+      <button class="btn-wide" style="background:#f5f5f0;border:0.5px solid #d0d0c8;color:#666;" onclick="show('s-top')">トップへ</button>
+    </div>
+  </div>
+
+  <!-- 管理者設定 -->
+  <div id="s-admin" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="show('s-top')">← 戻る</button>
+        <span class="header-title">⚙️ 承認者の設定</span>
+      </div>
+      <div class="header-sub">案件ごとに承認者を登録してください</div>
+    </div>
+    <div class="body">
+      <div class="info-box info-purple">ここで登録した承認者は、安全日誌の送信後に承認依頼通知が届きます。</div>
+      <div class="sec-label" style="margin-top:0;">📁 案件を選択</div>
+      <select style="width:100%;padding:9px 10px;font-size:13px;border:0.5px solid #d0d0c8;border-radius:8px;background:#fff;color:#1a1a1a;font-family:inherit;margin-bottom:14px;">
+        <option>淀屋橋ゲートタワー工事</option>
+        <option>なんばパークス改修工事</option>
+      </select>
+      <div class="sec-label">承認者一覧：淀屋橋ゲートタワー工事</div>
+      <div class="approver-list" id="approver-list">
+        <div class="approver-item">
+          <div class="approver-avatar">佐</div>
+          <div><div class="approver-name">佐藤 友和</div><div class="approver-role">主任 / 好竹エンジニアリング</div></div>
+          <span class="tag-purple">主任</span>
+          <button class="approver-del" onclick="delApprover(this)">削除</button>
+        </div>
+        <div class="approver-item">
+          <div class="approver-avatar">池</div>
+          <div><div class="approver-name">池上 良介</div><div class="approver-role">上司 / 大和ライフネクスト</div></div>
+          <span class="tag-blue">上司</span>
+          <button class="approver-del" onclick="delApprover(this)">削除</button>
+        </div>
+      </div>
+      <div class="sec-label">➕ 承認者を追加</div>
+      <div class="add-row">
+        <input type="text" class="add-input" id="new-approver-name" placeholder="氏名を入力">
+        <select class="add-sel" id="new-approver-role"><option>主任</option><option>上司</option><option>所長</option></select>
+        <button class="add-btn" onclick="addApprover()">追加</button>
+      </div>
+      <div class="info-box info-yellow">⚠️ 承認者が設定されていない案件は「未設定」のままになります。承認不要の案件はそのままで問題ありません。</div>
+    </div>
+  </div>
+
+</div>
+<script>
+  function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+  function doSign(){
+    const name=document.getElementById('tantou-name').value.trim();
+    if(!name){alert('担当者氏名を入力してください');return;}
+    document.getElementById('sign-empty-t').style.display='none';
+    document.getElementById('sign-done-t').style.display='flex';
+    document.getElementById('sign-done-name-t').textContent=name+' ✍';
+    const n=new Date();
+    document.getElementById('sign-done-time-t').textContent=`${n.getFullYear()}/${String(n.getMonth()+1).padStart(2,'0')}/${String(n.getDate()).padStart(2,'0')} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')} サイン完了`;
+  }
+  function submitTantou(){
+    const name=document.getElementById('tantou-name').value.trim();
+    if(!name){alert('担当者氏名を入力してください');return;}
+    if(document.getElementById('sign-done-t').style.display==='none'){alert('サインエリアをタップしてサインしてください');return;}
+    show('s-tantou-done');
+  }
+  function doApprove(btn,date){document.getElementById('approved-date').textContent=date;show('s-approve-done');}
+  function addApprover(){
+    const name=document.getElementById('new-approver-name').value.trim();
+    const role=document.getElementById('new-approver-role').value;
+    if(!name){alert('氏名を入力してください');return;}
+    const list=document.getElementById('approver-list');
+    const item=document.createElement('div');
+    item.className='approver-item';
+    const tagClass=role==='主任'?'tag-purple':'tag-blue';
+    item.innerHTML=`<div class="approver-avatar">${name.charAt(0)}</div><div><div class="approver-name">${name}</div><div class="approver-role">${role}</div></div><span class="${tagClass}">${role}</span><button class="approver-del" onclick="delApprover(this)">削除</button>`;
+    list.appendChild(item);
+    document.getElementById('new-approver-name').value='';
+  }
+  function delApprover(btn){if(confirm('この承認者を削除しますか？'))btn.closest('.approver-item').remove();}
+</script>
+</body>
+</html>
