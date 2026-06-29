@@ -8,22 +8,16 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 14px; }
   .app { max-width: 480px; margin: 0 auto; min-height: 100vh; }
-
   .header { background: #fff; border-bottom: 0.5px solid #e0e0d8; padding: 14px 16px; position: sticky; top: 0; z-index: 10; }
-  .header-title { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+  .header-title { font-size: 16px; font-weight: 700; }
   .header-sub { font-size: 11px; color: #888; margin-top: 2px; }
-
   .body { padding: 16px; }
   .date-banner { background: #eff6ff; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
   .date-label { font-size: 11px; color: #1d4ed8; }
   .date-val { font-size: 15px; font-weight: 700; color: #1d4ed8; }
-
-  .anken-select { margin-bottom: 16px; }
   .anken-label { font-size: 11px; color: #888; margin-bottom: 4px; }
-  select { width: 100%; padding: 9px 10px; font-size: 13px; border: 0.5px solid #d0d0c8; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; }
-
+  select { width: 100%; padding: 9px 10px; font-size: 13px; border: 0.5px solid #d0d0c8; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; margin-bottom: 16px; }
   .sec-title { font-size: 11px; font-weight: 700; color: #666; background: #f0f0ea; border-left: 3px solid #1a56db; padding: 4px 10px; border-radius: 0 4px 4px 0; margin-bottom: 10px; }
-
   .menu-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
   .menu-card { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; text-decoration: none; transition: all 0.15s; cursor: pointer; }
   .menu-card:hover { border-color: #93c5fd; background: #f8fbff; }
@@ -37,11 +31,26 @@
   .badge-wait { background: #fef3c7; color: #92400e; }
   .badge-new { background: #dcfce7; color: #166534; }
 
+  /* 管理メニュー：グリッド */
   .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .admin-card { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 10px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.15s; text-decoration: none; }
-  .admin-card:hover { border-color: #93c5fd; }
-  .admin-icon { font-size: 20px; margin-bottom: 4px; }
-  .admin-name { font-size: 12px; font-weight: 600; color: #1a1a1a; }
+  .admin-card { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 10px; padding: 14px 12px; text-align: center; cursor: pointer; transition: all 0.15s; text-decoration: none; display: block; }
+  .admin-card:hover { border-color: #93c5fd; background: #f8fbff; }
+  .admin-card:active { transform: scale(0.97); }
+  .admin-icon { font-size: 22px; margin-bottom: 6px; }
+  .admin-name { font-size: 12px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+  .admin-desc { font-size: 10px; color: #888; }
+
+  /* 準備中バッジ */
+  .coming-soon { font-size: 9px; background: #f5f5f0; color: #888; border: 0.5px solid #d0d0c8; border-radius: 99px; padding: 1px 6px; display: inline-block; margin-top: 3px; }
+
+  /* モーダル */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 100; display: none; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: #fff; border-radius: 14px; padding: 20px 18px; width: 88%; max-width: 340px; text-align: center; }
+  .modal-icon { font-size: 32px; margin-bottom: 10px; }
+  .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .modal-desc { font-size: 12px; color: #888; line-height: 1.6; margin-bottom: 16px; }
+  .modal-btn { width: 100%; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; background: #1a56db; color: #fff; }
 </style>
 </head>
 <body>
@@ -56,13 +65,11 @@
       <div class="date-val" id="today"></div>
     </div>
 
-    <div class="anken-select">
-      <div class="anken-label">現在の案件</div>
-      <select>
-        <option>淀屋橋ゲートタワー工事</option>
-        <option>なんばパークス改修工事</option>
-      </select>
-    </div>
+    <div class="anken-label">現在の案件</div>
+    <select>
+      <option>淀屋橋ゲートタワー工事</option>
+      <option>なんばパークス改修工事</option>
+    </select>
 
     <div class="sec-title">📱 現場入力メニュー</div>
     <div class="menu-grid">
@@ -104,30 +111,56 @@
 
     <div class="sec-title">⚙️ 管理メニュー</div>
     <div class="admin-grid">
-      <a class="admin-card" href="#">
+      <a class="admin-card" href="anken.html">
         <div class="admin-icon">🏗</div>
         <div class="admin-name">案件登録</div>
+        <div class="admin-desc">工事情報・協力会社</div>
       </a>
-      <a class="admin-card" href="#">
+      <div class="admin-card" onclick="showComingSoon('書類出力','作成した書類をExcel形式でダウンロードできます。データ連携機能として次のステップで実装予定です。')">
         <div class="admin-icon">📁</div>
         <div class="admin-name">書類出力</div>
-      </a>
-      <a class="admin-card" href="#">
+        <div class="admin-desc">Excel・PDF出力</div>
+        <div class="coming-soon">実装予定</div>
+      </div>
+      <div class="admin-card" onclick="showComingSoon('施工要領書','SharePointに保存された施工要領書をアプリ内で閲覧できます。クラウド連携として次のステップで実装予定です。')">
         <div class="admin-icon">📖</div>
         <div class="admin-name">施工要領書</div>
-      </a>
+        <div class="admin-desc">PDF閲覧</div>
+        <div class="coming-soon">実装予定</div>
+      </div>
       <a class="admin-card" href="approval.html">
         <div class="admin-icon">👑</div>
         <div class="admin-name">承認者設定</div>
+        <div class="admin-desc">主任・上司を登録</div>
       </a>
     </div>
   </div>
 </div>
+
+<!-- 準備中モーダル -->
+<div class="modal-overlay" id="modal" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-icon">🔧</div>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-desc" id="modal-desc"></div>
+    <button class="modal-btn" onclick="closeModal()">閉じる</button>
+  </div>
+</div>
+
 <script>
   const n = new Date();
   const days = ['日','月','火','水','木','金','土'];
   document.getElementById('today').textContent =
     `${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日（${days[n.getDay()]}）`;
+
+  function showComingSoon(title, desc) {
+    document.getElementById('modal-title').textContent = title + '（実装予定）';
+    document.getElementById('modal-desc').textContent = desc;
+    document.getElementById('modal').classList.add('active');
+  }
+  function closeModal() {
+    document.getElementById('modal').classList.remove('active');
+  }
 </script>
 </body>
 </html>
