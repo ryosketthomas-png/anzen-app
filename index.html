@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>安全書類管理システム</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 14px; }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; }
+
+  .header { background: #fff; border-bottom: 0.5px solid #e0e0d8; padding: 14px 16px; position: sticky; top: 0; z-index: 10; }
+  .header-title { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+  .header-sub { font-size: 11px; color: #888; margin-top: 2px; }
+
+  .body { padding: 16px; }
+  .date-banner { background: #eff6ff; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+  .date-label { font-size: 11px; color: #1d4ed8; }
+  .date-val { font-size: 15px; font-weight: 700; color: #1d4ed8; }
+
+  .anken-select { margin-bottom: 16px; }
+  .anken-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  select { width: 100%; padding: 9px 10px; font-size: 13px; border: 0.5px solid #d0d0c8; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; }
+
+  .sec-title { font-size: 11px; font-weight: 700; color: #666; background: #f0f0ea; border-left: 3px solid #1a56db; padding: 4px 10px; border-radius: 0 4px 4px 0; margin-bottom: 10px; }
+
+  .menu-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .menu-card { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; text-decoration: none; transition: all 0.15s; cursor: pointer; }
+  .menu-card:hover { border-color: #93c5fd; background: #f8fbff; }
+  .menu-card:active { transform: scale(0.98); }
+  .menu-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .menu-info { flex: 1; }
+  .menu-name { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+  .menu-desc { font-size: 11px; color: #888; line-height: 1.4; }
+  .menu-arrow { font-size: 18px; color: #ccc; }
+  .menu-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin-left: auto; margin-right: 4px; }
+  .badge-wait { background: #fef3c7; color: #92400e; }
+  .badge-new { background: #dcfce7; color: #166534; }
+
+  .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .admin-card { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 10px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.15s; text-decoration: none; }
+  .admin-card:hover { border-color: #93c5fd; }
+  .admin-icon { font-size: 20px; margin-bottom: 4px; }
+  .admin-name { font-size: 12px; font-weight: 600; color: #1a1a1a; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-title">🏗 安全書類管理システム</div>
+    <div class="header-sub">大和ライフネクスト 専門工事安全管理</div>
+  </div>
+  <div class="body">
+    <div class="date-banner">
+      <div class="date-label">本日</div>
+      <div class="date-val" id="today"></div>
+    </div>
+
+    <div class="anken-select">
+      <div class="anken-label">現在の案件</div>
+      <select>
+        <option>淀屋橋ゲートタワー工事</option>
+        <option>なんばパークス改修工事</option>
+      </select>
+    </div>
+
+    <div class="sec-title">📱 現場入力メニュー</div>
+    <div class="menu-grid">
+      <a class="menu-card" href="nyujo.html">
+        <div class="menu-icon" style="background:#eff6ff;">📝</div>
+        <div class="menu-info">
+          <div class="menu-name">新規入場者登録</div>
+          <div class="menu-desc">新規入場教育後に本人が入力</div>
+        </div>
+        <div class="menu-arrow">›</div>
+      </a>
+      <a class="menu-card" href="nyutaijo.html">
+        <div class="menu-icon" style="background:#f0fdf4;">🚪</div>
+        <div class="menu-info">
+          <div class="menu-name">入退場記録</div>
+          <div class="menu-desc">毎日の入退場を記録</div>
+        </div>
+        <span class="menu-badge badge-new">在場8名</span>
+        <div class="menu-arrow">›</div>
+      </a>
+      <a class="menu-card" href="nisshi.html">
+        <div class="menu-icon" style="background:#faf5ff;">📋</div>
+        <div class="menu-info">
+          <div class="menu-name">安全日誌・KY指示書</div>
+          <div class="menu-desc">AI安全対策生成・チェックリスト</div>
+        </div>
+        <div class="menu-arrow">›</div>
+      </a>
+      <a class="menu-card" href="approval.html">
+        <div class="menu-icon" style="background:#fef3c7;">🔏</div>
+        <div class="menu-info">
+          <div class="menu-name">承認（主任・上司）</div>
+          <div class="menu-desc">安全日誌の最終承認</div>
+        </div>
+        <span class="menu-badge badge-wait">承認待2件</span>
+        <div class="menu-arrow">›</div>
+      </a>
+    </div>
+
+    <div class="sec-title">⚙️ 管理メニュー</div>
+    <div class="admin-grid">
+      <a class="admin-card" href="#">
+        <div class="admin-icon">🏗</div>
+        <div class="admin-name">案件登録</div>
+      </a>
+      <a class="admin-card" href="#">
+        <div class="admin-icon">📁</div>
+        <div class="admin-name">書類出力</div>
+      </a>
+      <a class="admin-card" href="#">
+        <div class="admin-icon">📖</div>
+        <div class="admin-name">施工要領書</div>
+      </a>
+      <a class="admin-card" href="approval.html">
+        <div class="admin-icon">👑</div>
+        <div class="admin-name">承認者設定</div>
+      </a>
+    </div>
+  </div>
+</div>
+<script>
+  const n = new Date();
+  const days = ['日','月','火','水','木','金','土'];
+  document.getElementById('today').textContent =
+    `${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日（${days[n.getDay()]}）`;
+</script>
+</body>
+</html>
