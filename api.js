@@ -4,7 +4,7 @@
 // ===================================================
 
 // ⚠️ ここにGoogle Apps ScriptのデプロイURLを貼り付けてください
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyPixJZWnLQMbrlfm2uR-hIX1A8_lw6rvpl7nsBbvO2rPQD8P8BaSKFXUn4p8ERUvom/exec';
+const GAS_URL = 'YOUR_GAS_DEPLOY_URL_HERE';
 
 // ===================================================
 // 共通送信関数
@@ -53,7 +53,9 @@ async function saveWorker(formData) {
 
 // 入退場記録
 async function saveNyutaijo(formData) {
-  return await postToSheets('nyutaijo', formData);
+  // 「type」フィールドがGASのtype判定と競合するため「kind」に変換して送る
+  const { type: kind, ...rest } = formData;
+  return await postToSheets('nyutaijo', { ...rest, kind });
 }
 
 // 安全日誌
