@@ -521,11 +521,56 @@
     signChk=c.classList.contains('checked');updBtn();
   }
   function updBtn(){document.getElementById('btn-submit').disabled=!(signed&&signChk);}
-  function submitForm(){
+  async function submitForm(){
     const name=document.getElementById('f-name').value||'';
+    const btn=document.getElementById('btn-submit');
+    showLoading(btn,'送信中...');
+
+    // 選択済み資格を収集
+    const shikaku=[...document.querySelectorAll('.qual-tag.selected')].map(t=>t.textContent);
+    // 選択済み役割を収集
+    const yakuwari=[...document.querySelectorAll('.tog-btn.on')].map(t=>t.textContent);
+    // 保険状態を収集
+    const insMap={};
+    document.querySelectorAll('.ins-row').forEach(row=>{
+      const label=row.querySelector('.ins-label').textContent;
+      const yes=row.querySelector('.ins-btn.yes');
+      const no=row.querySelector('.ins-btn.no');
+      insMap[label]=yes?'加入':no?'未加入':'未選択';
+    });
+
+    try {
+      await saveWorker({
+        name: name,
+        kana: document.getElementById('f-kana').value,
+        birth: document.getElementById('f-birth').value,
+        age: document.getElementById('f-age').value,
+        ketsueki: document.querySelector('#g-ketsueki .on')?.textContent||'',
+        jusho: document.getElementById('f-jusho').value,
+        kaisha: document.getElementById('f-kaisha').value,
+        shokushu: document.querySelector('#g-shokushu .on')?.textContent||'',
+        yakuwari: yakuwari,
+        koyo: document.querySelector('#g-koyo .on')?.textContent||'',
+        koyobi: document.getElementById('f-koyobi').value,
+        bpH: document.getElementById('f-bph').value,
+        bpL: document.getElementById('f-bpl').value,
+        bpResult: document.getElementById('bp-ok').style.display!=='none'?'正常':document.getElementById('bp-warn').style.display!=='none'?'要注意':'入場不可',
+        insKenko: insMap['健康保険']||'',
+        insNenkin: insMap['年金保険']||'',
+        insKoyo: insMap['雇用保険']||'',
+        insTokurosa: insMap['特別労災（一人親方）']||'',
+        shikaku: shikaku,
+        nyujoDate: document.getElementById('f-nyujodate').value,
+      });
+    } catch(e) {
+      console.warn('Sheets保存エラー:', e);
+    }
+
+    hideLoading(btn);
     document.getElementById('qr-name-hint').textContent=name?`${name} さんのQRコード`:'スクリーンショットを保存してください';
     goTo('s-done');
   }
 </script>
+<script src="api.js"></script>
 </body>
 </html>

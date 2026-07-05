@@ -364,7 +364,38 @@
       document.getElementById('ky-preview-items').innerHTML=[...selectedKY].sort().map(i=>`<div class="ky-preview-item"><span>${nums[i]}</span><span>${kyItems[i]}</span></div>`).join('');
     }
   }
-  function submitForm(){goTo('s-done');}
+  async function submitForm(){
+    const btn=document.querySelector('#s4 .btn-next');
+    showLoading(btn,'送信中...');
+
+    // チェックリスト結果を収集
+    const checkResult={};
+    Object.keys(clState).forEach(i=>{checkResult[clItems[i]]=clState[i];});
+
+    // 選択済みKYを収集
+    const kySelected=[...selectedKY].sort().map(i=>kyItems[i]);
+
+    try {
+      await saveNisshi({
+        ankenId: document.getElementById('f-anken').value,
+        date: document.getElementById('f-date').value,
+        tenki: selectedWeather,
+        temp: document.getElementById('f-temp').value,
+        sekinin: document.getElementById('f-sekinin').value,
+        sagyo: document.getElementById('f-sagyo').value,
+        kyItems: kySelected,
+        hiyari: document.getElementById('f-hiyari').value,
+        checklist: checkResult,
+        approvalStatus: '未承認'
+      });
+    } catch(e) {
+      console.warn('Sheets保存エラー:', e);
+    }
+
+    hideLoading(btn);
+    goTo('s-done');
+  }
 </script>
+<script src="api.js"></script>
 </body>
 </html>

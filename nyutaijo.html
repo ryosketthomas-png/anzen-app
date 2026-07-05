@@ -306,10 +306,35 @@
     if(ok){btn.className='btn-submit '+(currentType==='入場'?'btn-green':'btn-red');btn.textContent=`${currentType}を記録する`;}
     else{btn.className='btn-submit btn-gray';btn.textContent='作業員と種別を選択してください';}
   }
-  function submitRecord(){
+  async function submitRecord(){
     const n=new Date();
     const timeStr=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+    const ankenId=document.getElementById('sel-anken').value;
+    const btn=document.getElementById('btn-record');
+
+    // ボタンを送信中に変更
+    showLoading(btn,'送信中...');
+
+    try {
+      // Google Sheetsに保存
+      await saveNyutaijo({
+        ankenId: ankenId,
+        workerId: 'WRK-' + selectedWorker.id,
+        name: selectedWorker.name,
+        kaisha: selectedWorker.kaisha,
+        shokushu: selectedWorker.shokushu,
+        type: currentType,
+        time: timeStr,
+        biko: document.getElementById('biko').value
+      });
+    } catch(e) {
+      // 保存失敗してもローカルには記録する
+      console.warn('Sheets保存エラー（ローカルには記録済み）:', e);
+    }
+
     logs.push({workerId:selectedWorker.id,type:currentType,time:timeStr});
+    hideLoading(btn);
+
     const isIn=currentType==='入場';
     document.getElementById('done-icon').className='complete-icon';
     document.getElementById('done-icon').style.background=isIn?'#dcfce7':'#fee2e2';
@@ -362,5 +387,6 @@
     totalCount.textContent=`在場 ${ti-to}名`;
   }
 </script>
+<script src="api.js"></script>
 </body>
 </html>
