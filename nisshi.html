@@ -300,10 +300,17 @@
     if (!ankenId) { countEl.value = '案件を選択すると自動取得'; return; }
     countEl.value = '取得中...';
     try {
-      const today = todayStr();
-      const records = await fetchNyutaijo(ankenId, today);
-      // 入場記録のみカウント（退場除く）
-      const nyujoCount = records.filter(r => r['種別'] === '入場').length;
+      // 日付なしで全件取得して今日分をフィルタ
+      const records = await fetchNyutaijo(ankenId, '');
+      const todayDate = new Date();
+      const todayJP = `${todayDate.getFullYear()}/${String(todayDate.getMonth()+1).padStart(2,'0')}/${String(todayDate.getDate()).padStart(2,'0')}`;
+      const todayISO = todayStr();
+      // Sheetsの日付形式（どちらでも対応）
+      const todayRecords = records.filter(r => {
+        const d = String(r['記録日'] || '');
+        return d.startsWith(todayJP) || d.startsWith(todayISO);
+      });
+      const nyujoCount = todayRecords.filter(r => r['種別'] === '入場').length;
       countEl.value = `${nyujoCount}名（本日入場）`;
     } catch(e) {
       countEl.value = '取得できませんでした';
@@ -329,14 +336,23 @@
     const texts=['作業内容を解析中...','リスクを洗い出し中...','安全対策を生成中...','もうすぐ完了です...'];
     let li=0;
     const lt=setInterval(()=>{li=(li+1)%texts.length;document.getElementById('ai-loading-text').textContent=texts[li];},1200);
+  async function generateKY(){
+    const sagyo=document.getElementById('f-sagyo').value.trim();
+    if(!sagyo){alert('先に作業内容を入力してください');return;}
+    document.getElementById('ai-gen-btn').disabled=true;
+    document.getElementById('ai-loading').style.display='block';
+    document.getElementById('ky-area').style.display='none';
+    const texts=['作業内容を解析中...','リスクを洗い出し中...','安全対策を生成中...','もうすぐ完了です...'];
+    let li=0;
+    const lt=setInterval(()=>{li=(li+1)%texts.length;document.getElementById('ai-loading-text').textContent=texts[li];},1200);
     try{
-      const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:`あなたは建設現場の安全管理の専門家です。以下の作業内容に対して、KY活動のための安全対策を10個生成してください。作業内容：${sagyo}。要件：具体的で実践的、学びになる詳しい内容、改修工事現場に即した内容。必ずJSON形式のみで出力すること。{"items":["安全対策1","安全対策2","安全対策3","安全対策4","安全対策5","安全対策6","安全対策7","安全対策8","安全対策9","安全対策10"]}`}]})});
-      const data=await res.json();
-      const text=data.content.map(c=>c.text||'').join('');
-      const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
-      kyItems=parsed.items;
+      // GAS経由でClaude APIを呼び出す
+      const items = await postToSheets('generateKY', { sagyo: sagyo });
+      kyItems = items;
     }catch(e){
-      kyItems=['作業前に検電器で電源遮断を確認し、施錠・表示を行ってから作業を開始すること','天井内作業は必ず2名1組で行い、単独作業を禁止すること','脚立・足場の使用前点検を実施し、不良品は使用しないこと','配線作業中は手元・足元を常に確認し、転落防止に努めること','幹線引込時は電線の重量に注意し、複数名で分担して腰への負担を軽減すること','工具・資材の落下防止のため、高所では必ず安全ひもを使用すること','狭所作業時は換気を確保し、熱中症・酸欠に注意すること','電動工具使用前に絶縁確認・試運転を行い、受理票を貼ること','他業者との作業範囲を事前に確認し、混在作業での接触事故を防ぐこと','作業終了時は電源・火気を確認し、整理整頓を徹底すること'];
+      console.error('KY生成エラー:', e);
+      alert('AI安全対策の生成に失敗しました。再度お試しください。');
+      kyItems=[];
     }finally{
       clearInterval(lt);
       document.getElementById('ai-loading').style.display='none';
