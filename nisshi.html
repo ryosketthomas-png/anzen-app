@@ -42,11 +42,9 @@
   .ai-box { background: #f5f3ff; border: 1px solid #c4b5fd; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
   .ai-box-title { font-size: 11px; font-weight: 700; color: #5b21b6; margin-bottom: 6px; }
   .ai-box-desc { font-size: 10px; color: #5b21b6; opacity: 0.85; margin-bottom: 8px; line-height: 1.5; }
-  .ai-textarea { width: 100%; padding: 8px 10px; font-size: 13px; border: 0.5px solid #d0d0c8; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; resize: vertical; min-height: 64px; box-sizing: border-box; }
-  .ai-textarea:focus { outline: none; border-color: #7c6fcd; }
   .ai-gen-btn { width: 100%; margin-top: 8px; padding: 10px; font-size: 12px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; background: #5145cd; color: #fff; }
   .ai-gen-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .ai-loading { background: #f5f3ff; border-radius: 10px; padding: 20px; text-align: center; margin-bottom: 8px; display: none; }
+  .ai-loading { background: #f5f3ff; border-radius: 10px; padding: 20px; text-align: center; display: none; }
   .spinner { width: 28px; height: 28px; border: 3px solid rgba(81,69,205,0.2); border-top-color: #5145cd; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 8px; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .ai-loading-text { font-size: 12px; color: #5b21b6; font-weight: 600; }
@@ -112,8 +110,13 @@
       <div class="step-bar" id="sb1"></div>
     </div>
     <div class="form-body">
-      <div class="field"><div class="field-label">案件 <span class="req">必須</span></div>
-        <select id="f-anken" onchange="fetchNyujoCount()"><option value="">選択してください</option><option>淀屋橋ゲートタワー工事</option><option>なんばパークス改修工事</option></select>
+      <div class="field">
+        <div class="field-label">案件 <span class="req">必須</span></div>
+        <select id="f-anken" onchange="fetchNyujoCount()">
+          <option value="">選択してください</option>
+          <option>淀屋橋ゲートタワー工事</option>
+          <option>なんばパークス改修工事</option>
+        </select>
       </div>
       <div class="field"><div class="field-label">作業日 <span class="auto-b">自動</span></div><input type="text" id="f-date" class="auto" readonly></div>
       <div class="field">
@@ -247,8 +250,9 @@
   </div>
 
 </div>
+<script src="api.js"></script>
 <script>
-  let selectedWeather='',kyItems=[],selectedKY=new Set();
+  let selectedWeather='', kyItems=[], selectedKY=new Set();
   const now=new Date();
   const days=['日','月','火','水','木','金','土'];
   document.getElementById('f-date').value=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${days[now.getDay()]}）`;
@@ -265,22 +269,28 @@
   // チェックリスト初期化
   const clItems=['朝礼・KY活動を実施したか','作業員全員の体調確認を実施したか','保護具（ヘルメット・安全帯・安全靴）の着用確認をしたか','電動工具の絶縁検査・試運転を実施したか','作業エリアの立入禁止区域・養生の設置を確認したか','脚立・足場の点検を実施したか（ガタつき・損傷確認）','作業範囲について他業者・近隣への周知を行ったか'];
   const clEl=document.getElementById('cl-list');
+  const clState={};
   clItems.forEach((text,i)=>{
     const div=document.createElement('div');
     div.className='ky-item';div.id=`cl-${i}`;
-    div.innerHTML=`<div style="display:flex;gap:4px;flex-shrink:0;margin-top:2px;"><div class="ky-chk" id="clok-${i}" onclick="setCL(${i},'ok')" style="cursor:pointer;font-size:11px;">良</div><div class="ky-chk" id="clng-${i}" onclick="setCL(${i},'ng')" style="cursor:pointer;font-size:11px;border-color:#d0d0c8;">否</div></div><div class="ky-text">${text}</div>`;
+    div.innerHTML=`<div style="display:flex;gap:4px;flex-shrink:0;margin-top:2px;">
+      <div id="clok-${i}" onclick="setCL(${i},'ok')" style="width:28px;height:24px;border-radius:4px;border:1.5px solid #d0d0c8;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f5f5f0;color:#888;">良</div>
+      <div id="clng-${i}" onclick="setCL(${i},'ng')" style="width:28px;height:24px;border-radius:4px;border:1.5px solid #d0d0c8;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f5f5f0;color:#888;">否</div>
+    </div><div class="ky-text">${text}</div>`;
     clEl.appendChild(div);
   });
-  const clState={};
+
   function setCL(i,val){
     if(clState[i]===val){delete clState[i];} else {clState[i]=val;}
     const ok=document.getElementById(`clok-${i}`);
     const ng=document.getElementById(`clng-${i}`);
     const item=document.getElementById(`cl-${i}`);
-    ok.className='ky-chk'+(clState[i]==='ok'?' on':'');
-    ng.style.background=clState[i]==='ng'?'#c81e1e':'';
+    ok.style.background=clState[i]==='ok'?'#057a55':'#f5f5f0';
+    ok.style.color=clState[i]==='ok'?'#fff':'#888';
+    ok.style.borderColor=clState[i]==='ok'?'#057a55':'#d0d0c8';
+    ng.style.background=clState[i]==='ng'?'#c81e1e':'#f5f5f0';
+    ng.style.color=clState[i]==='ng'?'#fff':'#888';
     ng.style.borderColor=clState[i]==='ng'?'#c81e1e':'#d0d0c8';
-    ng.style.color=clState[i]==='ng'?'#fff':'#1a1a1a';
     item.style.background=clState[i]==='ok'?'#f0fdf4':clState[i]==='ng'?'#fff7ed':'';
   }
 
@@ -292,36 +302,43 @@
     if(!isNaN(n))renderSB(n);
     if(id==='s4')buildSummary();
   }
-  function selWeather(btn,val){document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');selectedWeather=val;}
+
+  function selWeather(btn,val){
+    document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('sel'));
+    btn.classList.add('sel');
+    selectedWeather=val;
+  }
+
   // 入退場記録から当日の入場者数を自動取得
   async function fetchNyujoCount() {
-    const ankenId = document.getElementById('f-anken').value;
-    const countEl = document.getElementById('f-nyujo-count');
-    if (!ankenId) { countEl.value = '案件を選択すると自動取得'; return; }
-    countEl.value = '取得中...';
+    const ankenId=document.getElementById('f-anken').value;
+    const countEl=document.getElementById('f-nyujo-count');
+    if(!ankenId){countEl.value='案件を選択すると自動取得';return;}
+    countEl.value='取得中...';
     try {
-      // 日付なしで全件取得して今日分をフィルタ
-      const records = await fetchNyutaijo(ankenId, '');
-      const todayDate = new Date();
-      const todayJP = `${todayDate.getFullYear()}/${String(todayDate.getMonth()+1).padStart(2,'0')}/${String(todayDate.getDate()).padStart(2,'0')}`;
-      const todayISO = todayStr();
-      // Sheetsの日付形式（どちらでも対応）
-      const todayRecords = records.filter(r => {
-        const d = String(r['記録日'] || '');
-        return d.startsWith(todayJP) || d.startsWith(todayISO);
+      const records=await fetchNyutaijo(ankenId,'');
+      const todayDate=new Date();
+      const todayJP=`${todayDate.getFullYear()}/${String(todayDate.getMonth()+1).padStart(2,'0')}/${String(todayDate.getDate()).padStart(2,'0')}`;
+      const todayISO=todayStr();
+      const todayRecords=records.filter(r=>{
+        const d=String(r['記録日']||'');
+        return d.startsWith(todayJP)||d.startsWith(todayISO);
       });
-      const nyujoCount = todayRecords.filter(r => r['種別'] === '入場').length;
-      countEl.value = `${nyujoCount}名（本日入場）`;
+      const nyujoCount=todayRecords.filter(r=>r['種別']==='入場').length;
+      countEl.value=`${nyujoCount}名（本日入場）`;
     } catch(e) {
-      countEl.value = '取得できませんでした';
-      console.warn('入場者数取得エラー:', e);
+      countEl.value='取得できませんでした';
+      console.warn('入場者数取得エラー:',e);
     }
   }
+
+  function next1(){
     if(!document.getElementById('f-anken').value){alert('案件を選択してください');return;}
     if(!selectedWeather){alert('天気を選択してください');return;}
     if(!document.getElementById('f-sekinin').value){alert('作業責任者を入力してください');return;}
     goTo('s2');
   }
+
   function next2(){
     if(!document.getElementById('f-sagyo').value){alert('作業内容を入力してください');return;}
     goTo('s3');
@@ -336,24 +353,14 @@
     const texts=['作業内容を解析中...','リスクを洗い出し中...','安全対策を生成中...','もうすぐ完了です...'];
     let li=0;
     const lt=setInterval(()=>{li=(li+1)%texts.length;document.getElementById('ai-loading-text').textContent=texts[li];},1200);
-  async function generateKY(){
-    const sagyo=document.getElementById('f-sagyo').value.trim();
-    if(!sagyo){alert('先に作業内容を入力してください');return;}
-    document.getElementById('ai-gen-btn').disabled=true;
-    document.getElementById('ai-loading').style.display='block';
-    document.getElementById('ky-area').style.display='none';
-    const texts=['作業内容を解析中...','リスクを洗い出し中...','安全対策を生成中...','もうすぐ完了です...'];
-    let li=0;
-    const lt=setInterval(()=>{li=(li+1)%texts.length;document.getElementById('ai-loading-text').textContent=texts[li];},1200);
-    try{
-      // GAS経由でClaude APIを呼び出す
-      const items = await postToSheets('generateKY', { sagyo: sagyo });
-      kyItems = items;
-    }catch(e){
-      console.error('KY生成エラー:', e);
+    try {
+      const items=await postToSheets('generateKY',{sagyo:sagyo});
+      kyItems=items;
+    } catch(e) {
+      console.error('KY生成エラー:',e);
       alert('AI安全対策の生成に失敗しました。再度お試しください。');
       kyItems=[];
-    }finally{
+    } finally {
       clearInterval(lt);
       document.getElementById('ai-loading').style.display='none';
       document.getElementById('ai-gen-btn').disabled=false;
@@ -365,6 +372,7 @@
   const nums=['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'];
   function renderKYList(){
     const list=document.getElementById('ky-list');
+    if(kyItems.length===0){list.innerHTML='';document.getElementById('ky-area').style.display='none';return;}
     list.innerHTML=kyItems.map((item,i)=>{
       const sel=selectedKY.has(i);
       return `<div class="ky-item ${sel?'selected':''}" onclick="toggleKY(${i})"><div class="ky-chk ${sel?'on':''}">${sel?'✓':''}</div><div class="ky-num">${nums[i]}</div><div class="ky-text">${item}</div></div>`;
@@ -375,6 +383,7 @@
     cnt.textContent=`${n}個選択中（3〜5個推奨）`;
     cnt.style.color=n>=3&&n<=5?'#057a55':n>5?'#c81e1e':'#888';
   }
+
   function toggleKY(i){if(selectedKY.has(i))selectedKY.delete(i);else selectedKY.add(i);renderKYList();}
 
   function buildSummary(){
@@ -383,30 +392,28 @@
     const temp=document.getElementById('f-temp').value;
     const sekinin=document.getElementById('f-sekinin').value;
     const sagyo=document.getElementById('f-sagyo').value;
+    const nyujoCount=document.getElementById('f-nyujo-count').value;
     document.getElementById('summary-basic').innerHTML=`
       <div class="s-row"><span class="s-label">案件</span><span class="s-val">${anken}</span></div>
       <div class="s-row"><span class="s-label">作業日</span><span class="s-val">${date}</span></div>
       <div class="s-row"><span class="s-label">天気・気温</span><span class="s-val">${selectedWeather} ${temp?temp+'℃':''}</span></div>
       <div class="s-row"><span class="s-label">作業責任者</span><span class="s-val">${sekinin}</span></div>
+      <div class="s-row"><span class="s-label">入場者数</span><span class="s-val">${nyujoCount}</span></div>
       <div class="s-row"><span class="s-label">作業内容</span><span class="s-val">${sagyo.substring(0,30)}${sagyo.length>30?'...':''}</span></div>
     `;
     if(selectedKY.size===0){
       document.getElementById('ky-preview-items').innerHTML='<span style="color:#888;">（STEP 2でKY安全対策を選択してください）</span>';
-    }else{
+    } else {
       document.getElementById('ky-preview-items').innerHTML=[...selectedKY].sort().map(i=>`<div class="ky-preview-item"><span>${nums[i]}</span><span>${kyItems[i]}</span></div>`).join('');
     }
   }
+
   async function submitForm(){
     const btn=document.querySelector('#s4 .btn-next');
     showLoading(btn,'送信中...');
-
-    // チェックリスト結果を収集
     const checkResult={};
     Object.keys(clState).forEach(i=>{checkResult[clItems[i]]=clState[i];});
-
-    // 選択済みKYを収集
     const kySelected=[...selectedKY].sort().map(i=>kyItems[i]);
-
     try {
       await saveNisshi({
         ankenId: document.getElementById('f-anken').value,
@@ -422,13 +429,11 @@
         approvalStatus: '未承認'
       });
     } catch(e) {
-      console.warn('Sheets保存エラー:', e);
+      console.warn('Sheets保存エラー:',e);
     }
-
     hideLoading(btn);
     goTo('s-done');
   }
 </script>
-<script src="api.js"></script>
 </body>
 </html>
