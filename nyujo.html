@@ -253,7 +253,7 @@
       </div>
       <div class="field-row">
         <div class="field"><div class="field-label">雇入年月日 <span class="req">必須</span></div><input type="date" id="f-koyobi"></div>
-        <div class="field"><div class="field-label">経験年数 <span class="req">必須</span></div><input type="text" placeholder="例：6年"></div>
+        <div class="field"><div class="field-label">経験年数 <span class="req">必須</span></div><input type="text" id="f-keiken" placeholder="例：6年"></div>
       </div>
     </div>
     <div class="footer">
@@ -286,11 +286,11 @@
       <div class="sec-label" style="margin-top:14px;">🏥 健康診断</div>
       <div class="field-row">
         <div class="field"><div class="field-label">最近の健康診断日 <span class="req">必須</span></div><input type="date" id="f-kenko"></div>
-        <div class="field"><div class="field-label">種類 <span class="req">必須</span></div><select><option value="">選択</option><option>定期健康診断</option><option>雇入時健康診断</option><option>特殊健康診断</option></select></div>
+        <div class="field"><div class="field-label">種類 <span class="req">必須</span></div><select id="f-kenko-type"><option value="">選択</option><option>定期健康診断</option><option>雇入時健康診断</option><option>特殊健康診断</option></select></div>
       </div>
       <div class="sec-label" style="margin-top:14px;">👨‍👩‍👧 家族緊急連絡先</div>
-      <div class="field"><div class="field-label">氏名 <span class="req">必須</span></div><input type="text" placeholder="例：辻本 花子"></div>
-      <div class="field"><div class="field-label">続柄 <span class="req">必須</span></div><select><option value="">選択</option><option>配偶者</option><option>父</option><option>母</option><option>子</option><option>その他</option></select></div>
+      <div class="field"><div class="field-label">氏名 <span class="req">必須</span></div><input type="text" id="f-kazoku" placeholder="例：辻本 花子"></div>
+      <div class="field"><div class="field-label">続柄 <span class="req">必須</span></div><select id="f-kazoku-zoku"><option value="">選択</option><option>配偶者</option><option>父</option><option>母</option><option>子</option><option>その他</option></select></div>
     </div>
     <div class="footer">
       <button class="btn-back" onclick="goTo('s2')">← 戻る</button>
@@ -548,17 +548,25 @@
         ketsueki: document.querySelector('#g-ketsueki .on')?.textContent||'',
         jusho: document.getElementById('f-jusho').value,
         kaisha: document.getElementById('f-kaisha').value,
+        jisu: (document.getElementById('f-kaisha').value.match(/（(.+?)次）/)||[])[1]||'',
         shokushu: document.querySelector('#g-shokushu .on')?.textContent||'',
         yakuwari: yakuwari,
         koyo: document.querySelector('#g-koyo .on')?.textContent||'',
         koyobi: document.getElementById('f-koyobi').value,
+        keiken: document.getElementById('f-keiken').value,
         bpH: document.getElementById('f-bph').value,
         bpL: document.getElementById('f-bpl').value,
         bpResult: document.getElementById('bp-ok').style.display!=='none'?'正常':document.getElementById('bp-warn').style.display!=='none'?'要注意':'入場不可',
+        kenkoDate: document.getElementById('f-kenko').value,
+        kenkoType: document.getElementById('f-kenko-type').value,
+        kazokuName: document.getElementById('f-kazoku').value,
+        kazokuZokugara: document.getElementById('f-kazoku-zoku').value,
         insKenko: insMap['健康保険']||'',
         insNenkin: insMap['年金保険']||'',
         insKoyo: insMap['雇用保険']||'',
         insTokurosa: insMap['特別労災（一人親方）']||'',
+        chutaiko: insMap['中退共']||'',
+        kentaiko: insMap['建退共']||'',
         shikaku: shikaku,
         nyujoDate: document.getElementById('f-nyujodate').value,
       });
