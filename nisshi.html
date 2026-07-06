@@ -113,7 +113,7 @@
     </div>
     <div class="form-body">
       <div class="field"><div class="field-label">案件 <span class="req">必須</span></div>
-        <select id="f-anken"><option value="">選択してください</option><option>淀屋橋ゲートタワー工事</option><option>なんばパークス改修工事</option></select>
+        <select id="f-anken" onchange="fetchNyujoCount()"><option value="">選択してください</option><option>淀屋橋ゲートタワー工事</option><option>なんばパークス改修工事</option></select>
       </div>
       <div class="field"><div class="field-label">作業日 <span class="auto-b">自動</span></div><input type="text" id="f-date" class="auto" readonly></div>
       <div class="field">
@@ -129,7 +129,7 @@
         <div class="field"><div class="field-label">気温（℃）</div><input type="number" id="f-temp" placeholder="例：28"></div>
         <div class="field"><div class="field-label">作業責任者 <span class="req">必須</span></div><input type="text" id="f-sekinin" placeholder="例：佐藤 友和"></div>
       </div>
-      <div class="field"><div class="field-label">本日の入場者数 <span class="auto-b">自動</span></div><input type="text" class="auto" readonly value="入退場記録から自動集計"></div>
+      <div class="field"><div class="field-label">本日の入場者数 <span class="auto-b">自動</span></div><input type="text" id="f-nyujo-count" class="auto" readonly value="案件を選択すると自動取得"></div>
     </div>
     <div class="footer"><button class="btn-next btn-blue" onclick="next1()">次へ → 作業内容・KY</button></div>
   </div>
@@ -293,7 +293,23 @@
     if(id==='s4')buildSummary();
   }
   function selWeather(btn,val){document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');selectedWeather=val;}
-  function next1(){
+  // 入退場記録から当日の入場者数を自動取得
+  async function fetchNyujoCount() {
+    const ankenId = document.getElementById('f-anken').value;
+    const countEl = document.getElementById('f-nyujo-count');
+    if (!ankenId) { countEl.value = '案件を選択すると自動取得'; return; }
+    countEl.value = '取得中...';
+    try {
+      const today = todayStr();
+      const records = await fetchNyutaijo(ankenId, today);
+      // 入場記録のみカウント（退場除く）
+      const nyujoCount = records.filter(r => r['種別'] === '入場').length;
+      countEl.value = `${nyujoCount}名（本日入場）`;
+    } catch(e) {
+      countEl.value = '取得できませんでした';
+      console.warn('入場者数取得エラー:', e);
+    }
+  }
     if(!document.getElementById('f-anken').value){alert('案件を選択してください');return;}
     if(!selectedWeather){alert('天気を選択してください');return;}
     if(!document.getElementById('f-sekinin').value){alert('作業責任者を入力してください');return;}
@@ -382,6 +398,7 @@
         tenki: selectedWeather,
         temp: document.getElementById('f-temp').value,
         sekinin: document.getElementById('f-sekinin').value,
+        nyujoCount: document.getElementById('f-nyujo-count').value,
         sagyo: document.getElementById('f-sagyo').value,
         kyItems: kySelected,
         hiyari: document.getElementById('f-hiyari').value,
