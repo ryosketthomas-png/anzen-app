@@ -292,6 +292,18 @@
     ng.style.color=clState[i]==='ng'?'#fff':'#888';
     ng.style.borderColor=clState[i]==='ng'?'#c81e1e':'#d0d0c8';
     item.style.background=clState[i]==='ok'?'#f0fdf4':clState[i]==='ng'?'#fff7ed':'';
+    // 否選択時にメモ欄を表示
+    const existingNote=item.querySelector('.cl-ng-note');
+    if(clState[i]==='ng' && !existingNote){
+      const note=document.createElement('div');
+      note.className='cl-ng-note';
+      note.style.cssText='margin-top:6px;width:100%;';
+      note.innerHTML=`<input type="text" id="clnote-${i}" placeholder="否の理由・対処内容を入力してください" style="width:100%;padding:6px 8px;font-size:11px;border:0.5px solid #fca5a5;border-radius:6px;background:#fff;color:#1a1a1a;font-family:inherit;">`;
+      item.querySelector('.ky-text').appendChild(note);
+      setTimeout(()=>document.getElementById(`clnote-${i}`)?.focus(),50);
+    } else if(clState[i]!=='ng' && existingNote){
+      existingNote.remove();
+    }
   }
 
   function goTo(id){
@@ -412,7 +424,12 @@
     const btn=document.querySelector('#s4 .btn-next');
     showLoading(btn,'送信中...');
     const checkResult={};
-    Object.keys(clState).forEach(i=>{checkResult[clItems[i]]=clState[i];});
+    Object.keys(clState).forEach(i=>{
+      const note=document.getElementById(`clnote-${i}`);
+      checkResult[clItems[i]]=clState[i]==='ng' && note?.value
+        ? `否：${note.value}`
+        : clState[i];
+    });
     const kySelected=[...selectedKY].sort().map(i=>kyItems[i]);
     try {
       await saveNisshi({
