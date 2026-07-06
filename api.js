@@ -9,11 +9,13 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbyPixJZWnLQMbrlfm2uR-hI
 // ===================================================
 // 共通送信関数
 // ===================================================
-async function postToSheets(type, data) {
+async function postToSheets(sheetType, data) {
   try {
+    const payload = { type: sheetType };
+    Object.keys(data).forEach(k => { payload[k] = data[k]; });
     const res = await fetch(GAS_URL, {
       method: 'POST',
-      body: JSON.stringify({ type, ...data })
+      body: JSON.stringify(payload)
     });
     const json = await res.json();
     if (json.status !== 'ok') throw new Error(json.message);
@@ -53,9 +55,18 @@ async function saveWorker(formData) {
 
 // 入退場記録
 async function saveNyutaijo(formData) {
-  // 「type」フィールドがGASのtype判定と競合するため「kind」に変換して送る
-  const { type: kind, ...rest } = formData;
-  return await postToSheets('nyutaijo', { ...rest, kind });
+  // 「type」フィールドがGASのtype判定と競合するため「nyutaijoType」に変換して送る
+  const payload = {
+    ankenId: formData.ankenId,
+    workerId: formData.workerId,
+    name: formData.name,
+    kaisha: formData.kaisha,
+    shokushu: formData.shokushu,
+    nyutaijoType: formData.type,
+    time: formData.time,
+    biko: formData.biko
+  };
+  return await postToSheets('nyutaijo', payload);
 }
 
 // 安全日誌
