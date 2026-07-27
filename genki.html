@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>元請KY指示入力 | 安全書類管理</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 14px; }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; }
+  .header { background: #fff; border-bottom: 0.5px solid #e0e0d8; padding: 10px 16px; position: sticky; top: 0; z-index: 10; }
+  .header-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .back-btn { background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 6px; padding: 4px 8px; font-size: 11px; color: #666; cursor: pointer; text-decoration: none; }
+  .header-title { font-size: 14px; font-weight: 700; }
+  .header-sub { font-size: 10px; color: #888; }
+  .form-body { padding: 16px; }
+  .sec-label { font-size: 11px; font-weight: 700; color: #666; background: #f5f5f0; border-left: 3px solid #d97706; padding: 4px 10px; border-radius: 0 4px 4px 0; margin-bottom: 10px; margin-top: 14px; }
+  .field { margin-bottom: 10px; }
+  .field-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  .req { color: #dc2626; font-size: 10px; }
+  .auto-b { font-size: 9px; background: #dcfce7; color: #166534; padding: 1px 5px; border-radius: 99px; }
+  input[type="text"], select, textarea {
+    width: 100%; padding: 9px 10px; font-size: 13px; border: 0.5px solid #d0d0c8;
+    border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: #d97706; }
+  input.auto { background: #f5f5f0; color: #888; }
+  textarea { resize: vertical; min-height: 60px; }
+  .shiji-item { display: flex; gap: 8px; margin-bottom: 6px; align-items: flex-start; }
+  .shiji-num { font-size: 13px; color: #888; flex-shrink: 0; padding-top: 9px; min-width: 16px; }
+  .shiji-input { flex: 1; padding: 8px 10px; font-size: 13px; border: 0.5px solid #d0d0c8; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; }
+  .shiji-input:focus { outline: none; border-color: #d97706; }
+  .add-row-btn { width: 100%; padding: 8px; font-size: 12px; color: #d97706; background: #fffbeb; border: 0.5px dashed #fcd34d; border-radius: 8px; cursor: pointer; margin-bottom: 10px; }
+  .info-box { font-size: 11px; line-height: 1.6; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; }
+  .info-orange { background: #fffbeb; color: #92400e; border: 0.5px solid #fcd34d; }
+  .saved-card { background: #dcfce7; border: 0.5px solid #86efac; border-radius: 10px; padding: 14px; margin-bottom: 10px; display: none; }
+  .saved-title { font-size: 13px; font-weight: 700; color: #057a55; margin-bottom: 8px; }
+  .saved-item { font-size: 12px; color: #065f46; padding: 3px 0; display: flex; gap: 6px; }
+  .footer { padding: 10px 16px 18px; border-top: 0.5px solid #e0e0d8; background: #fff; position: sticky; bottom: 0; display: flex; gap: 8px; }
+  .btn-back { background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 10px; padding: 11px 16px; font-size: 13px; color: #666; cursor: pointer; }
+  .btn-save { flex: 1; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; background: #d97706; color: #fff; }
+  .btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-top">
+      <a href="index.html" class="back-btn">← ホーム</a>
+      <span class="header-title">🏢 元請KY指示入力</span>
+    </div>
+    <div class="header-sub">下請各社のKY指示書に反映されます</div>
+  </div>
+
+  <div class="form-body">
+    <div class="info-box info-orange">
+      ここで入力した内容は、本日の下請各社のKY指示書に自動で表示されます。<br>
+      朝礼前に入力・保存してください。
+    </div>
+
+    <!-- 保存済み表示 -->
+    <div class="saved-card" id="saved-card">
+      <div class="saved-title">✅ 本日の元請指示（保存済み）</div>
+      <div id="saved-items"></div>
+      <button style="margin-top:10px;font-size:11px;color:#057a55;background:none;border:none;cursor:pointer;text-decoration:underline;" onclick="editMode()">内容を修正する</button>
+    </div>
+
+    <!-- 入力フォーム -->
+    <div id="input-form">
+      <div class="field">
+        <div class="field-label">現場名 <span class="req">必須</span></div>
+        <select id="f-genba">
+          <option value="">選択してください</option>
+          <option>淀屋橋ゲートタワー工事</option>
+          <option>なんばパークス改修工事</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label">作業日 <span class="auto-b">自動</span></div>
+        <input type="text" id="f-date" class="auto" readonly>
+      </div>
+      <div class="field">
+        <div class="field-label">入力者（元請担当者名）<span class="req">必須</span></div>
+        <input type="text" id="f-tanto" placeholder="例：池上 良介">
+      </div>
+
+      <div class="sec-label">本日の元請安全指示事項</div>
+      <div style="font-size:10px;color:#888;margin-bottom:10px;">本日の作業全体に関わる安全指示を入力してください（3〜5項目）</div>
+      <div id="shiji-rows">
+        <div class="shiji-item"><span class="shiji-num">・</span><input type="text" class="shiji-input" placeholder="安全指示事項を入力"></div>
+        <div class="shiji-item"><span class="shiji-num">・</span><input type="text" class="shiji-input" placeholder="安全指示事項を入力"></div>
+        <div class="shiji-item"><span class="shiji-num">・</span><input type="text" class="shiji-input" placeholder="安全指示事項を入力"></div>
+        <div class="shiji-item"><span class="shiji-num">・</span><input type="text" class="shiji-input" placeholder="安全指示事項を入力"></div>
+      </div>
+      <button class="add-row-btn" onclick="addRow()">＋ 指示事項を追加</button>
+
+      <div class="sec-label">特記事項・連絡事項（任意）</div>
+      <div class="field">
+        <textarea id="f-tokki" placeholder="例：午後から発注者立会い検査あり。作業エリアを整理しておくこと。"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button class="btn-back" onclick="location.href='index.html'">← 戻る</button>
+    <button class="btn-save" id="btn-save" onclick="saveInstructions()">保存して下請に共有する</button>
+  </div>
+</div>
+
+<script src="api.js"></script>
+<script>
+  const now = new Date();
+  const days = ['日','月','火','水','木','金','土'];
+  const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${days[now.getDay()]}）`;
+  document.getElementById('f-date').value = dateStr;
+
+  // 保存済みの指示を読み込み
+  async function loadSaved() {
+    try {
+      const today = todayStr();
+      const data = await getFromSheets('genki', { date: today });
+      if (data && data.length > 0) {
+        const latest = data[data.length - 1];
+        showSaved(latest);
+      }
+    } catch(e) {
+      console.warn('保存済み読み込みエラー:', e);
+    }
+  }
+  loadSaved();
+
+  function showSaved(d) {
+    const items = (d['指示事項'] || '').split('\n').filter(Boolean);
+    document.getElementById('saved-items').innerHTML =
+      items.map(i => `<div class="saved-item"><span>・</span><span>${i}</span></div>`).join('') +
+      (d['特記事項'] ? `<div class="saved-item" style="margin-top:6px;color:#065f46;font-size:10px;">【特記】${d['特記事項']}</div>` : '');
+    document.getElementById('saved-card').style.display = 'block';
+    document.getElementById('input-form').style.display = 'none';
+  }
+
+  function editMode() {
+    document.getElementById('saved-card').style.display = 'none';
+    document.getElementById('input-form').style.display = 'block';
+  }
+
+  function addRow() {
+    const row = document.createElement('div');
+    row.className = 'shiji-item';
+    row.innerHTML = '<span class="shiji-num">・</span><input type="text" class="shiji-input" placeholder="安全指示事項を入力">';
+    document.getElementById('shiji-rows').appendChild(row);
+  }
+
+  async function saveInstructions() {
+    const genba = document.getElementById('f-genba').value;
+    const tanto = document.getElementById('f-tanto').value;
+    if (!genba) { alert('現場名を選択してください'); return; }
+    if (!tanto) { alert('入力者名を入力してください'); return; }
+
+    const shijis = [...document.querySelectorAll('.shiji-input')]
+      .map(i => i.value.trim()).filter(Boolean);
+    if (shijis.length === 0) { alert('安全指示事項を入力してください'); return; }
+
+    const btn = document.getElementById('btn-save');
+    showLoading(btn, '保存中...');
+
+    try {
+      await postToSheets('genki', {
+        genba,
+        date: dateStr,
+        tanto,
+        shijis,
+        tokki: document.getElementById('f-tokki').value
+      });
+      showSaved({ '指示事項': shijis.join('\n'), '特記事項': document.getElementById('f-tokki').value });
+      alert('✅ 保存しました。下請各社のKY指示書に反映されます。');
+    } catch(e) {
+      alert('保存に失敗しました。再度お試しください。');
+    } finally {
+      hideLoading(btn);
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KY・安全指示書 | 安全書類管理</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 14px; }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .header { background: #fff; border-bottom: 0.5px solid #e0e0d8; padding: 10px 16px; position: sticky; top: 0; z-index: 10; }
+  .header-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .back-btn { background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 6px; padding: 4px 8px; font-size: 11px; color: #666; cursor: pointer; text-decoration: none; }
+  .header-title { font-size: 14px; font-weight: 700; }
+  .header-sub { font-size: 10px; color: #888; }
+  .step-bar { display: flex; gap: 3px; margin-top: 6px; }
+  .step-dot { height: 4px; border-radius: 2px; flex: 1; background: #e0e0d8; }
+  .step-dot.done { background: #93c5fd; }
+  .step-dot.active { background: #1a56db; }
+  .form-body { padding: 16px; }
+  .sec-label { font-size: 11px; font-weight: 700; color: #666; background: #f5f5f0; border-left: 3px solid #1a56db; padding: 4px 10px; border-radius: 0 4px 4px 0; margin-bottom: 10px; }
+  .field { margin-bottom: 10px; }
+  .field-label { font-size: 11px; color: #888; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+  .req { color: #dc2626; font-size: 10px; }
+  .auto-b { font-size: 9px; background: #dcfce7; color: #166534; padding: 1px 5px; border-radius: 99px; }
+  input[type="text"], input[type="date"], input[type="number"], select, textarea {
+    width: 100%; padding: 9px 10px; font-size: 13px; border: 0.5px solid #d0d0c8;
+    border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: #1a56db; }
+  input.auto { background: #f5f5f0; color: #888; }
+  textarea { resize: vertical; min-height: 64px; }
+  .field-row { display: flex; gap: 8px; }
+  .field-row .field { flex: 1; }
+  .weather-row { display: flex; gap: 8px; }
+  .weather-btn { flex: 1; border: 1.5px solid #d0d0c8; border-radius: 10px; padding: 10px 4px; font-size: 18px; text-align: center; cursor: pointer; background: #fff; transition: all 0.15s; }
+  .weather-btn .wlabel { font-size: 10px; color: #888; margin-top: 3px; }
+  .weather-btn.sel { border-color: #1a56db; background: #eff6ff; }
+  .weather-btn.sel .wlabel { color: #1a56db; font-weight: 700; }
+  .sagyo-row { background: #fff; border: 0.5px solid #d0d0c8; border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
+  .sagyo-header { display: grid; grid-template-columns: 1fr 44px 44px 1fr; padding: 6px 10px; background: #f5f5f0; border-bottom: 0.5px solid #d0d0c8; }
+  .sagyo-header span { font-size: 10px; color: #888; font-weight: 700; text-align: center; }
+  .sagyo-header span:first-child { text-align: left; }
+  .sagyo-header span:last-child { text-align: left; padding-left: 6px; }
+  .sagyo-item { display: grid; grid-template-columns: 1fr 44px 44px 1fr; gap: 4px; padding: 8px 10px; border-bottom: 0.5px solid #e0e0d8; align-items: center; }
+  .sagyo-item:last-child { border-bottom: none; }
+  .sagyo-item input { padding: 6px 8px; font-size: 12px; border: 0.5px solid #d0d0c8; border-radius: 6px; background: #fff; font-family: inherit; color: #1a1a1a; }
+  .sagyo-item input:focus { outline: none; border-color: #1a56db; }
+  .sagyo-item input[type="number"] { text-align: center; }
+  .add-row-btn { width: 100%; padding: 8px; font-size: 12px; color: #1a56db; background: #eff6ff; border: 0.5px dashed #93c5fd; border-radius: 8px; cursor: pointer; margin-bottom: 10px; }
+  .ai-box { background: #f5f3ff; border: 1px solid #c4b5fd; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+  .ai-box-title { font-size: 11px; font-weight: 700; color: #5b21b6; margin-bottom: 6px; }
+  .ai-gen-btn { width: 100%; padding: 10px; font-size: 12px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; background: #5145cd; color: #fff; margin-top: 6px; }
+  .ai-gen-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .ai-loading { background: #f5f3ff; border-radius: 10px; padding: 20px; text-align: center; display: none; }
+  .spinner { width: 28px; height: 28px; border: 3px solid rgba(81,69,205,0.2); border-top-color: #5145cd; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .ai-loading-text { font-size: 12px; color: #5b21b6; font-weight: 600; }
+  .ky-list { background: #fff; border: 0.5px solid #d0d0c8; border-radius: 10px; overflow: hidden; margin-bottom: 6px; }
+  .ky-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-bottom: 0.5px solid #e0e0d8; cursor: pointer; }
+  .ky-item:last-child { border-bottom: none; }
+  .ky-item.selected { background: #f5f3ff; }
+  .ky-chk { width: 18px; height: 18px; border: 1.5px solid #d0d0c8; border-radius: 4px; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; }
+  .ky-chk.on { background: #5145cd; border-color: #5145cd; color: #fff; font-size: 11px; font-weight: 700; }
+  .ky-num { font-size: 11px; color: #888; flex-shrink: 0; margin-top: 2px; min-width: 20px; }
+  .ky-text { font-size: 12px; color: #1a1a1a; line-height: 1.6; flex: 1; }
+  .ky-item.selected .ky-text { color: #3730a3; }
+  .ky-count { font-size: 10px; color: #888; text-align: right; margin-bottom: 4px; }
+  .shiji-item { display: flex; gap: 8px; margin-bottom: 6px; align-items: flex-start; }
+  .shiji-num { font-size: 13px; color: #888; flex-shrink: 0; padding-top: 9px; min-width: 16px; }
+  .shiji-input { flex: 1; padding: 8px 10px; font-size: 13px; border: 0.5px solid #d0d0c8; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; }
+  .shiji-input:focus { outline: none; border-color: #1a56db; }
+  .sign-list { display: flex; flex-direction: column; gap: 10px; }
+  .sign-person { background: #fff; border: 0.5px solid #d0d0c8; border-radius: 10px; overflow: hidden; }
+  .sign-person-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f5f5f0; border-bottom: 0.5px solid #d0d0c8; }
+  .sign-person-name { font-size: 12px; font-weight: 600; color: #1a1a1a; flex: 1; }
+  .sign-done-badge { font-size: 10px; background: #dcfce7; color: #057a55; border-radius: 99px; padding: 2px 8px; font-weight: 700; display: none; }
+  .sign-canvas { width: 100%; height: 80px; display: block; background: #fafaf8; cursor: crosshair; touch-action: none; }
+  .sign-actions { display: flex; gap: 6px; padding: 6px 10px; border-top: 0.5px solid #e0e0d8; }
+  .sign-clear-btn { font-size: 11px; color: #888; background: none; border: none; cursor: pointer; text-decoration: underline; }
+  .sign-ok-btn { margin-left: auto; font-size: 11px; font-weight: 700; background: #057a55; color: #fff; border: none; border-radius: 6px; padding: 4px 12px; cursor: pointer; }
+  .add-person-btn { width: 100%; padding: 10px; font-size: 12px; color: #1a56db; background: #eff6ff; border: 0.5px dashed #93c5fd; border-radius: 8px; cursor: pointer; margin-top: 4px; }
+  .footer { padding: 10px 16px 18px; border-top: 0.5px solid #e0e0d8; background: #fff; position: sticky; bottom: 0; display: flex; gap: 8px; }
+  .btn-back { background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 10px; padding: 11px 16px; font-size: 13px; color: #666; cursor: pointer; }
+  .btn-next { flex: 1; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; }
+  .btn-blue { background: #1a56db; color: #fff; }
+  .btn-purple { background: #5145cd; color: #fff; }
+  .btn-green { background: #057a55; color: #fff; }
+  .complete-wrap { padding: 24px 16px; text-align: center; }
+  .complete-icon { width: 64px; height: 64px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 14px; }
+  .complete-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .complete-sub { font-size: 11px; color: #888; margin-bottom: 20px; line-height: 1.8; white-space: pre-line; }
+  .btn-wide { width: 100%; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- STEP 1: 基本情報 -->
+  <div id="s1" class="screen active">
+    <div class="header">
+      <div class="header-top">
+        <a href="index.html" class="back-btn">← ホーム</a>
+        <span class="header-title">⛑ KY・安全指示書</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">1 / 5</span>
+      </div>
+      <div class="header-sub">基本情報を入力してください</div>
+      <div class="step-bar" id="sb1"></div>
+    </div>
+    <div class="form-body">
+      <div class="field">
+        <div class="field-label">現場名 <span class="req">必須</span></div>
+        <select id="f-genba">
+          <option value="">選択してください</option>
+          <option>淀屋橋ゲートタワー工事</option>
+          <option>なんばパークス改修工事</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label">業者名 <span class="req">必須</span></div>
+        <select id="f-gyosha">
+          <option value="">選択してください</option>
+          <option>好竹エンジニアリング株式会社</option>
+          <option>山下電気</option>
+          <option>協力会社C</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <div class="field-label">安全衛生責任者（職長）<span class="req">必須</span></div>
+          <input type="text" id="f-shokucho" placeholder="例：辻本 大樹">
+        </div>
+        <div class="field">
+          <div class="field-label">作業日 <span class="auto-b">自動</span></div>
+          <input type="text" id="f-date" class="auto" readonly>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">天候 <span class="req">必須</span></div>
+        <div class="weather-row">
+          <div class="weather-btn" onclick="selWeather(this,'晴れ')">☀️<div class="wlabel">晴れ</div></div>
+          <div class="weather-btn" onclick="selWeather(this,'曇り')">⛅<div class="wlabel">曇り</div></div>
+          <div class="weather-btn" onclick="selWeather(this,'雨')">🌧<div class="wlabel">雨</div></div>
+          <div class="weather-btn" onclick="selWeather(this,'雪')">❄️<div class="wlabel">雪</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn-next btn-blue" onclick="next1()">次へ → 作業内容</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: 作業内容・出面 -->
+  <div id="s2" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="goTo('s1')">← 戻る</button>
+        <span class="header-title">⛑ KY・安全指示書</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">2 / 5</span>
+      </div>
+      <div class="header-sub">作業内容・出面・重点安全事項</div>
+      <div class="step-bar" id="sb2"></div>
+    </div>
+    <div class="form-body">
+      <div class="sec-label">作業内容・出面予定</div>
+      <div class="sagyo-row">
+        <div class="sagyo-header">
+          <span>作業内容</span><span>予定</span><span>実施</span><span style="padding-left:6px;">重点安全事項</span>
+        </div>
+        <div id="sagyo-rows">
+          <div class="sagyo-item">
+            <input type="text" placeholder="作業内容">
+            <input type="number" placeholder="0" min="0">
+            <input type="number" placeholder="0" min="0">
+            <input type="text" placeholder="安全事項">
+          </div>
+        </div>
+      </div>
+      <button class="add-row-btn" onclick="addSagyoRow()">＋ 作業内容を追加</button>
+
+      <div class="sec-label">使用建設工具・機械</div>
+      <div class="field">
+        <input type="text" id="f-kikai" placeholder="例：電動ドリル、脚立、玉掛けワイヤー">
+      </div>
+
+      <div class="sec-label">連絡事項</div>
+      <div class="field">
+        <textarea id="f-renraku" placeholder="例：昼休憩は12:00〜13:00、午後から検査あり"></textarea>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn-back" onclick="goTo('s1')">← 戻る</button>
+      <button class="btn-next btn-blue" onclick="next2()">次へ → 安全指示</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: 元請安全指示（自動取得・読み取り専用） -->
+  <div id="s3" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="goTo('s2')">← 戻る</button>
+        <span class="header-title">⛑ KY・安全指示書</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">3 / 5</span>
+      </div>
+      <div class="header-sub">元請事業者からの安全指示</div>
+      <div class="step-bar" id="sb3"></div>
+    </div>
+    <div class="form-body">
+      <div style="font-size:11px;color:#92400e;background:#fffbeb;border:0.5px solid #fcd34d;border-radius:8px;padding:10px;margin-bottom:12px;line-height:1.6;">
+        🏢 元請担当者が入力した本日の安全指示です。内容を確認してから次へ進んでください。
+      </div>
+      <div id="genki-loading" style="text-align:center;padding:20px;font-size:12px;color:#888;">
+        元請指示を取得中...
+      </div>
+      <div id="genki-content" style="display:none;">
+        <div class="sec-label">本日の元請安全指示事項</div>
+        <div id="genki-shiji-list" style="background:#fff;border:0.5px solid #d0d0c8;border-radius:10px;overflow:hidden;margin-bottom:10px;"></div>
+        <div id="genki-tokki-wrap" style="display:none;">
+          <div class="sec-label">特記事項</div>
+          <div id="genki-tokki" style="background:#fffbeb;border:0.5px solid #fcd34d;border-radius:8px;padding:10px;font-size:12px;color:#92400e;line-height:1.6;margin-bottom:10px;"></div>
+        </div>
+        <div style="font-size:10px;color:#888;text-align:right;" id="genki-tanto"></div>
+      </div>
+      <div id="genki-none" style="display:none;background:#fff7ed;border:0.5px solid #fcd34d;border-radius:8px;padding:14px;text-align:center;">
+        <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:4px;">⚠️ 元請指示が未入力です</div>
+        <div style="font-size:11px;color:#92400e;margin-bottom:10px;">元請担当者に入力を依頼してください</div>
+        <a href="genki.html" style="font-size:12px;color:#d97706;font-weight:700;">→ 元請指示を入力する</a>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn-back" onclick="goTo('s2')">← 戻る</button>
+      <button class="btn-next btn-blue" onclick="goTo('s4')">次へ → KY活動</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: KY活動（AI生成） -->
+  <div id="s4" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="goTo('s3')">← 戻る</button>
+        <span class="header-title">⛑ KY・安全指示書</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">4 / 5</span>
+      </div>
+      <div class="header-sub">KY活動・危険予知と対策</div>
+      <div class="step-bar" id="sb4"></div>
+    </div>
+    <div class="form-body">
+      <div class="sec-label">対象作業名</div>
+      <div class="field">
+        <input type="text" id="f-taisho" placeholder="例：天井内電気配線工事・幹線引込作業">
+      </div>
+      <div class="ai-box">
+        <div class="ai-box-title">✨ AI危険予知・対策提案</div>
+        <div style="font-size:10px;color:#5b21b6;opacity:0.85;margin-bottom:6px;">対象作業名を入力して生成ボタンを押すと、AIが危険予知と対策を10個提案します。</div>
+        <button class="ai-gen-btn" id="ai-gen-btn" onclick="generateKY()">✨ AI危険予知・対策を生成する</button>
+      </div>
+      <div class="ai-loading" id="ai-loading">
+        <div class="spinner"></div>
+        <div class="ai-loading-text" id="ai-loading-text">作業内容を解析中...</div>
+      </div>
+      <div id="ky-area" style="display:none;">
+        <div class="ky-count" id="ky-count">0個選択中（3〜5個推奨）</div>
+        <div class="ky-list" id="ky-list"></div>
+        <button style="font-size:11px;color:#5145cd;background:none;border:none;cursor:pointer;text-decoration:underline;margin-top:4px;" onclick="generateKY()">↺ 再生成する</button>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn-back" onclick="goTo('s3')">← 戻る</button>
+      <button class="btn-next btn-purple" onclick="next4()">次へ → 朝礼サイン</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: 朝礼出席者サイン -->
+  <div id="s5" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="goTo('s4')">← 戻る</button>
+        <span class="header-title">⛑ KY・安全指示書</span>
+        <span style="font-size:10px;color:#888;margin-left:auto;">5 / 5</span>
+      </div>
+      <div class="header-sub">朝礼・KY出席者サイン</div>
+      <div class="step-bar" id="sb5"></div>
+    </div>
+    <div class="form-body">
+      <div style="font-size:11px;color:#1d4ed8;background:#eff6ff;border:0.5px solid #93c5fd;border-radius:8px;padding:10px;margin-bottom:12px;line-height:1.6;">
+        📱 端末を出席者に順番に渡して、各自でサインしてください。<br>「参加者を追加」で人数を増やせます。
+      </div>
+      <div class="sign-list" id="sign-list"></div>
+      <button class="add-person-btn" onclick="addPerson()">＋ 参加者を追加</button>
+    </div>
+    <div class="footer">
+      <button class="btn-back" onclick="goTo('s4')">← 戻る</button>
+      <button class="btn-next btn-green" onclick="submitForm()">送信して完了 ✓</button>
+    </div>
+  </div>
+
+  <!-- 完了 -->
+  <div id="s-done" class="screen">
+    <div class="complete-wrap">
+      <div class="complete-icon">✅</div>
+      <div class="complete-title">KY指示書を送信しました</div>
+      <div class="complete-sub" id="done-sub"></div>
+      <button class="btn-wide" style="background:#5145cd;color:#fff;" onclick="alert('PDF出力（実装予定）')">📄 PDFで出力する</button>
+      <button class="btn-wide" style="background:#1a56db;color:#fff;" onclick="location.href='ky.html'">新しいKY指示書を作成</button>
+      <a href="index.html" style="display:block;text-align:center;font-size:13px;color:#888;margin-top:8px;">ホームへ戻る</a>
+    </div>
+  </div>
+
+</div>
+<script src="api.js"></script>
+<script>
+  let selectedWeather='', kyItems=[], selectedKY=new Set();
+  let signData={}, personCount=0, signInitialized=false;
+
+  const now=new Date();
+  const days=['日','月','火','水','木','金','土'];
+  document.getElementById('f-date').value=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${days[now.getDay()]}）`;
+
+  function renderSB(step){
+    for(let i=1;i<=5;i++){
+      const el=document.getElementById('sb'+i);if(!el)continue;
+      el.innerHTML='';
+      for(let j=1;j<=5;j++){const d=document.createElement('div');d.className='step-dot'+(j<i?' done':j===i?' active':'');el.appendChild(d);}
+    }
+  }
+  renderSB(1);
+
+  function goTo(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0,0);
+    const n=parseInt(id.replace('s',''));
+    if(!isNaN(n))renderSB(n);
+    if(id==='s5'&&!signInitialized){
+      signInitialized=true;
+      const shokucho=document.getElementById('f-shokucho').value;
+      const gyosha=document.getElementById('f-gyosha').value;
+      addPerson(shokucho, gyosha+'（職長）');
+    }
+    if(id==='s3') loadGenkiShiji();
+  }
+
+  // 元請指示を取得して表示
+  async function loadGenkiShiji() {
+    document.getElementById('genki-loading').style.display='block';
+    document.getElementById('genki-content').style.display='none';
+    document.getElementById('genki-none').style.display='none';
+    try {
+      const genba=document.getElementById('f-genba').value;
+      const data=await getFromSheets('genki',{date:todayStr(),genba});
+      if(data&&data.length>0){
+        const latest=data[data.length-1];
+        const items=(latest['指示事項']||'').split('\n').filter(Boolean);
+        document.getElementById('genki-shiji-list').innerHTML=items.map(item=>
+          `<div style="display:flex;gap:8px;padding:9px 12px;border-bottom:0.5px solid #e0e0d8;font-size:12px;color:#1a1a1a;">
+            <span style="color:#d97706;flex-shrink:0;">・</span><span>${item}</span>
+          </div>`
+        ).join('').replace(/border-bottom:0\.5px solid #e0e0d8;">(?!.*border-bottom)/,'">');
+        if(latest['特記事項']){
+          document.getElementById('genki-tokki').textContent=latest['特記事項'];
+          document.getElementById('genki-tokki-wrap').style.display='block';
+        }
+        document.getElementById('genki-tanto').textContent=`指示者：${latest['入力者']||''}`;
+        document.getElementById('genki-content').style.display='block';
+      } else {
+        document.getElementById('genki-none').style.display='block';
+      }
+    } catch(e){
+      document.getElementById('genki-none').style.display='block';
+    } finally {
+      document.getElementById('genki-loading').style.display='none';
+    }
+  }
+
+  function selWeather(btn,val){
+    document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('sel'));
+    btn.classList.add('sel');selectedWeather=val;
+  }
+
+  function next1(){
+    if(!document.getElementById('f-genba').value){alert('現場名を選択してください');return;}
+    if(!document.getElementById('f-gyosha').value){alert('業者名を選択してください');return;}
+    if(!document.getElementById('f-shokucho').value){alert('安全衛生責任者（職長）を入力してください');return;}
+    if(!selectedWeather){alert('天候を選択してください');return;}
+    goTo('s2');
+  }
+
+  function next2(){
+    const rows=document.querySelectorAll('#sagyo-rows .sagyo-item');
+    let hasContent=false;
+    rows.forEach(row=>{if(row.querySelector('input').value)hasContent=true;});
+    if(!hasContent){alert('作業内容を入力してください');return;}
+    goTo('s3');
+  }
+
+  function addSagyoRow(){
+    const row=document.createElement('div');
+    row.className='sagyo-item';
+    row.innerHTML='<input type="text" placeholder="作業内容"><input type="number" placeholder="0" min="0"><input type="number" placeholder="0" min="0"><input type="text" placeholder="安全事項">';
+    document.getElementById('sagyo-rows').appendChild(row);
+  }
+
+  function addShijiRow(){
+    const row=document.createElement('div');
+    row.className='shiji-item';
+    row.innerHTML='<span class="shiji-num">・</span><input type="text" class="shiji-input" placeholder="安全指示事項を入力">';
+    document.getElementById('shiji-rows').appendChild(row);
+  }
+
+  async function generateKY(){
+    const sagyo=document.getElementById('f-taisho').value.trim();
+    if(!sagyo){alert('先に対象作業名を入力してください');return;}
+    document.getElementById('ai-gen-btn').disabled=true;
+    document.getElementById('ai-loading').style.display='block';
+    document.getElementById('ky-area').style.display='none';
+    const texts=['作業内容を解析中...','リスクを洗い出し中...','危険予知を生成中...','もうすぐ完了です...'];
+    let li=0;
+    const lt=setInterval(()=>{li=(li+1)%texts.length;document.getElementById('ai-loading-text').textContent=texts[li];},1200);
+    try {
+      const items=await postToSheets('generateKY',{sagyo:sagyo});
+      kyItems=items;
+    } catch(e) {
+      alert('AI生成に失敗しました。再度お試しください。');
+      kyItems=[];
+    } finally {
+      clearInterval(lt);
+      document.getElementById('ai-loading').style.display='none';
+      document.getElementById('ai-gen-btn').disabled=false;
+      selectedKY=new Set();
+      renderKYList();
+    }
+  }
+
+  const nums=['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'];
+  function renderKYList(){
+    const list=document.getElementById('ky-list');
+    if(kyItems.length===0){list.innerHTML='';document.getElementById('ky-area').style.display='none';return;}
+    list.innerHTML=kyItems.map((item,i)=>{
+      const sel=selectedKY.has(i);
+      return `<div class="ky-item ${sel?'selected':''}" onclick="toggleKY(${i})"><div class="ky-chk ${sel?'on':''}">${sel?'✓':''}</div><div class="ky-num">${nums[i]}</div><div class="ky-text">${item}</div></div>`;
+    }).join('');
+    document.getElementById('ky-area').style.display='block';
+    const n=selectedKY.size;
+    const cnt=document.getElementById('ky-count');
+    cnt.textContent=`${n}個選択中（3〜5個推奨）`;
+    cnt.style.color=n>=3&&n<=5?'#057a55':n>5?'#c81e1e':'#888';
+  }
+
+  function toggleKY(i){if(selectedKY.has(i))selectedKY.delete(i);else selectedKY.add(i);renderKYList();}
+
+  function next4(){
+    if(selectedKY.size===0){alert('KY危険予知・対策を最低1つ選択してください');return;}
+    goTo('s5');
+  }
+
+  function addPerson(name='', role=''){
+    const id=personCount++;
+    const div=document.createElement('div');
+    div.className='sign-person';
+    div.id='person-'+id;
+    div.innerHTML=`
+      <div class="sign-person-header">
+        <div style="flex:1;">
+          <input type="text" value="${name}" placeholder="氏名を入力" style="border:none;background:transparent;font-size:12px;font-weight:600;color:#1a1a1a;padding:0;width:160px;outline:none;" id="pname-${id}">
+          <div style="font-size:10px;color:#888;">${role||'参加者'}</div>
+        </div>
+        <span class="sign-done-badge" id="badge-${id}">✅ サイン済み</span>
+      </div>
+      <canvas id="canvas-${id}" class="sign-canvas" width="440" height="80"></canvas>
+      <div class="sign-actions">
+        <button class="sign-clear-btn" onclick="clearCanvas(${id})">クリア</button>
+        <button class="sign-ok-btn" onclick="confirmSign(${id})">サイン確定 ✓</button>
+      </div>
+    `;
+    document.getElementById('sign-list').appendChild(div);
+    initCanvas(id);
+  }
+
+  function initCanvas(id){
+    const cv=document.getElementById('canvas-'+id);
+    const ctx=cv.getContext('2d');
+    ctx.lineWidth=2.5;ctx.lineCap='round';ctx.strokeStyle='#1a56db';
+    let drawing=false;
+    function getP(e){
+      const r=cv.getBoundingClientRect();
+      const src=e.touches?e.touches[0]:e;
+      return{x:(src.clientX-r.left)*(cv.width/r.width),y:(src.clientY-r.top)*(cv.height/r.height)};
+    }
+    cv.addEventListener('mousedown',e=>{drawing=true;const p=getP(e);ctx.beginPath();ctx.moveTo(p.x,p.y);});
+    cv.addEventListener('mousemove',e=>{if(!drawing)return;const p=getP(e);ctx.lineTo(p.x,p.y);ctx.stroke();});
+    cv.addEventListener('mouseup',()=>drawing=false);
+    cv.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=getP(e);ctx.beginPath();ctx.moveTo(p.x,p.y);},{passive:false});
+    cv.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=getP(e);ctx.lineTo(p.x,p.y);ctx.stroke();},{passive:false});
+    cv.addEventListener('touchend',()=>drawing=false);
+  }
+
+  function clearCanvas(id){
+    const cv=document.getElementById('canvas-'+id);
+    cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
+    delete signData[id];
+    document.getElementById('badge-'+id).style.display='none';
+    cv.style.background='#fafaf8';
+  }
+
+  function confirmSign(id){
+    signData[id]=document.getElementById('canvas-'+id).toDataURL();
+    document.getElementById('badge-'+id).style.display='inline-block';
+    document.getElementById('canvas-'+id).style.background='#f0fdf4';
+    const next=document.getElementById('person-'+(id+1));
+    if(next)next.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+
+  async function submitForm(){
+    const kySelected=[...selectedKY].sort().map(i=>kyItems[i]);
+    const signedCount=Object.keys(signData).length;
+    const gyosha=document.getElementById('f-gyosha').value;
+    const genba=document.getElementById('f-genba').value;
+    try {
+      await postToSheets('ky',{
+        genba,gyosha,
+        shokucho:document.getElementById('f-shokucho').value,
+        date:document.getElementById('f-date').value,
+        tenki:selectedWeather,
+        kikai:document.getElementById('f-kikai').value,
+        renraku:document.getElementById('f-renraku').value,
+        shijisha:document.getElementById('f-shijisha').value,
+        kyItems:kySelected,
+        signedCount
+      });
+    } catch(e){console.warn('Sheets保存エラー:',e);}
+    document.getElementById('done-sub').textContent=`${gyosha}\n${genba}\nKY対策 ${selectedKY.size}項目・署名者 ${signedCount}名`;
+    goTo('s-done');
+  }
+</script>
+</body>
+</html>

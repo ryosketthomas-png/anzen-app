@@ -180,19 +180,52 @@
         <span class="header-title">📋 安全日誌</span>
         <span style="font-size:10px;color:#888;margin-left:auto;">3 / 4</span>
       </div>
-      <div class="header-sub">工種別人員・安全チェックリスト</div>
+      <div class="header-sub">工種別人員・確認事項</div>
       <div class="step-bar" id="sb3"></div>
     </div>
     <div class="form-body">
-      <div class="sec-label">📊 工種別人員（本日）</div>
-      <div class="kt-table">
+      <div class="sec-label">📊 工種別人員（入退場記録より自動集計）</div>
+      <div class="kt-table" id="s3-kt-table">
         <div class="kt-header"><span>工種</span><span>入場</span><span>退場</span><span>現在</span></div>
-        <div class="kt-row"><div><div class="kt-name">電工</div></div><div class="kt-num num-in">6</div><div class="kt-num num-out">1</div><div class="kt-num num-cur">5</div></div>
-        <div class="kt-row"><div><div class="kt-name">現場管理</div></div><div class="kt-num num-in">1</div><div class="kt-num num-out">0</div><div class="kt-num num-cur">1</div></div>
-        <div class="kt-row"><div><div class="kt-name">内装</div></div><div class="kt-num num-in">2</div><div class="kt-num num-out">0</div><div class="kt-num num-cur">2</div></div>
-        <div class="kt-row total"><div><div class="kt-name" style="color:#1a56db;">合計</div></div><div class="kt-num num-in" style="font-size:15px;">9</div><div class="kt-num num-out" style="font-size:15px;">1</div><div class="kt-num num-cur" style="font-size:15px;">8</div></div>
+        <div style="padding:16px;text-align:center;font-size:12px;color:#888;">読み込み中...</div>
       </div>
-      <div class="sec-label" style="margin-top:4px;">✅ 安全チェックリスト（作業前）</div>
+
+      <div class="sec-label" style="margin-top:10px;">📋 確認事項（自動集計）</div>
+      <div style="background:#fff;border:0.5px solid #e0e0d8;border-radius:10px;overflow:hidden;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:0.5px solid #e0e0d8;">
+          <div>
+            <div style="font-size:12px;font-weight:600;">安全・作業指示書</div>
+            <div style="font-size:10px;color:#888;margin-top:1px;">本日のKY指示書提出枚数</div>
+          </div>
+          <div style="font-size:16px;font-weight:700;color:#1a56db;" id="s3-ky-count">取得中...</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:0.5px solid #e0e0d8;">
+          <div>
+            <div style="font-size:12px;font-weight:600;">安全誓約書（新規）</div>
+            <div style="font-size:10px;color:#888;margin-top:1px;">本日の新規入場者数</div>
+          </div>
+          <div style="font-size:16px;font-weight:700;color:#057a55;" id="s3-shinki-count">取得中...</div>
+        </div>
+        <div style="padding:10px 12px;">
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px;">有資格者数（本日入場）</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+            <div style="background:#f5f5f0;border-radius:8px;padding:8px;text-align:center;">
+              <div style="font-size:10px;color:#888;margin-bottom:4px;">玉掛け</div>
+              <div style="font-size:18px;font-weight:700;color:#1a1a1a;" id="s3-tamakake">-</div>
+            </div>
+            <div style="background:#f5f5f0;border-radius:8px;padding:8px;text-align:center;">
+              <div style="font-size:10px;color:#888;margin-bottom:4px;">足場組立等</div>
+              <div style="font-size:18px;font-weight:700;color:#1a1a1a;" id="s3-ashiba">-</div>
+            </div>
+            <div style="background:#f5f5f0;border-radius:8px;padding:8px;text-align:center;">
+              <div style="font-size:10px;color:#888;margin-bottom:4px;">有機溶剤</div>
+              <div style="font-size:18px;font-weight:700;color:#1a1a1a;" id="s3-yuki">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-label">✅ 安全チェックリスト（作業前）</div>
       <div class="ky-list" id="cl-list"></div>
     </div>
     <div class="footer">
@@ -320,6 +353,7 @@
     const n=parseInt(id.replace('s',''));
     if(!isNaN(n))renderSB(n);
     if(id==='s4')buildSummary();
+    if(id==='s3')loadS3Data();
   }
 
   function selWeather(btn,val){
@@ -348,6 +382,80 @@
     } catch(e) {
       countEl.value='取得できませんでした';
       console.warn('入場者数取得エラー:',e);
+    }
+  }
+
+  // STEP3：入退場・KY・新規・有資格者を自動集計
+  async function loadS3Data() {
+    const ankenId = document.getElementById('f-anken').value;
+    const today = todayStr();
+
+    // 工種別人員集計（入退場記録から）
+    try {
+      const records = await fetchNyutaijo(ankenId, '');
+      const todayDate = new Date();
+      const todayJP = `${todayDate.getFullYear()}/${String(todayDate.getMonth()+1).padStart(2,'0')}/${String(todayDate.getDate()).padStart(2,'0')}`;
+      const todayRecs = records.filter(r => {
+        const d = String(r['記録日'] || '');
+        return d.startsWith(todayJP) || d.startsWith(today);
+      });
+
+      // 工種別集計
+      const sm = {};
+      todayRecs.forEach(r => {
+        const shoku = r['職種'] || 'その他';
+        if (!sm[shoku]) sm[shoku] = { in: 0, out: 0 };
+        if (r['種別'] === '入場') sm[shoku].in++;
+        else sm[shoku].out++;
+      });
+
+      let ti = 0, to = 0;
+      let kt = '<div class="kt-header"><span>工種</span><span>入場</span><span>退場</span><span>現在</span></div>';
+      Object.entries(sm).forEach(([s, c]) => {
+        const cur = c.in - c.out; ti += c.in; to += c.out;
+        kt += `<div class="kt-row"><div><div class="kt-name">${s}</div></div><div class="kt-num num-in">${c.in}</div><div class="kt-num num-out">${c.out}</div><div class="kt-num num-cur">${cur}</div></div>`;
+      });
+      if (Object.keys(sm).length === 0) {
+        kt += '<div style="padding:14px;text-align:center;font-size:12px;color:#888;">本日の入退場記録がありません</div>';
+      } else {
+        kt += `<div class="kt-row total"><div><div class="kt-name" style="color:#1a56db;">合計</div></div><div class="kt-num num-in" style="font-size:15px;">${ti}</div><div class="kt-num num-out" style="font-size:15px;">${to}</div><div class="kt-num num-cur" style="font-size:15px;">${ti-to}</div></div>`;
+      }
+      document.getElementById('s3-kt-table').innerHTML = kt;
+    } catch(e) {
+      document.getElementById('s3-kt-table').innerHTML = '<div style="padding:14px;text-align:center;font-size:12px;color:#888;">取得できませんでした</div>';
+    }
+
+    // KY指示書枚数（本日送信済み）
+    try {
+      const kyData = await getFromSheets('ky', { date: today });
+      document.getElementById('s3-ky-count').textContent = `${(kyData||[]).length}枚`;
+    } catch(e) { document.getElementById('s3-ky-count').textContent = '-'; }
+
+    // 新規入場者数（当日の作業員マスタ登録数）
+    try {
+      const workers = await getFromSheets('workers', { ankenId });
+      const todayWorkers = (workers||[]).filter(w => {
+        const d = String(w['入場日'] || '');
+        return d.includes(todayStr()) || d.includes(new Date().toLocaleDateString('ja-JP'));
+      });
+      document.getElementById('s3-shinki-count').textContent = `${todayWorkers.length}名`;
+    } catch(e) { document.getElementById('s3-shinki-count').textContent = '-'; }
+
+    // 有資格者数（作業員マスタの資格情報から）
+    try {
+      const workers = await getFromSheets('workers', { ankenId });
+      let tamakake = 0, ashiba = 0, yuki = 0;
+      (workers||[]).forEach(w => {
+        const shikaku = String(w['資格'] || '');
+        if (shikaku.includes('玉掛け')) tamakake++;
+        if (shikaku.includes('足場')) ashiba++;
+        if (shikaku.includes('有機溶剤')) yuki++;
+      });
+      document.getElementById('s3-tamakake').textContent = tamakake;
+      document.getElementById('s3-ashiba').textContent = ashiba;
+      document.getElementById('s3-yuki').textContent = yuki;
+    } catch(e) {
+      ['s3-tamakake','s3-ashiba','s3-yuki'].forEach(id => document.getElementById(id).textContent = '-');
     }
   }
 
