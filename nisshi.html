@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>安全日誌・KY指示書 | 安全書類管理</title>
+<title>工事・安全日誌 | 安全書類管理</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 14px; }
@@ -20,18 +20,18 @@
   .step-dot.done { background: #93c5fd; }
   .step-dot.active { background: #1a56db; }
   .form-body { padding: 16px; }
-  .sec-label { font-size: 11px; color: #888; background: #f5f5f0; border-left: 2px solid #1a56db; padding: 3px 8px; border-radius: 0 4px 4px 0; margin-bottom: 8px; }
-  .field { margin-bottom: 12px; }
+  .sec-label { font-size: 11px; font-weight: 700; color: #666; background: #f5f5f0; border-left: 3px solid #1a56db; padding: 4px 10px; border-radius: 0 4px 4px 0; margin-bottom: 10px; }
+  .field { margin-bottom: 10px; }
   .field-label { font-size: 11px; color: #888; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
   .req { color: #dc2626; font-size: 10px; }
   .auto-b { font-size: 9px; background: #dcfce7; color: #166534; padding: 1px 5px; border-radius: 99px; }
-  input[type="text"], input[type="date"], input[type="number"], select, textarea {
+  input[type="text"], input[type="date"], input[type="number"], input[type="time"], select, textarea {
     width: 100%; padding: 9px 10px; font-size: 13px; border: 0.5px solid #d0d0c8;
     border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit;
   }
   input:focus, select:focus, textarea:focus { outline: none; border-color: #1a56db; }
   input.auto { background: #f5f5f0; color: #888; }
-  textarea { resize: vertical; min-height: 72px; }
+  textarea { resize: vertical; min-height: 60px; }
   .field-row { display: flex; gap: 8px; }
   .field-row .field { flex: 1; }
   .weather-row { display: flex; gap: 8px; }
@@ -39,25 +39,11 @@
   .weather-btn .wlabel { font-size: 10px; color: #888; margin-top: 3px; }
   .weather-btn.sel { border-color: #1a56db; background: #eff6ff; }
   .weather-btn.sel .wlabel { color: #1a56db; font-weight: 700; }
-  .ai-box { background: #f5f3ff; border: 1px solid #c4b5fd; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
-  .ai-box-title { font-size: 11px; font-weight: 700; color: #5b21b6; margin-bottom: 6px; }
-  .ai-box-desc { font-size: 10px; color: #5b21b6; opacity: 0.85; margin-bottom: 8px; line-height: 1.5; }
-  .ai-gen-btn { width: 100%; margin-top: 8px; padding: 10px; font-size: 12px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; background: #5145cd; color: #fff; }
-  .ai-gen-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .ai-loading { background: #f5f3ff; border-radius: 10px; padding: 20px; text-align: center; display: none; }
-  .spinner { width: 28px; height: 28px; border: 3px solid rgba(81,69,205,0.2); border-top-color: #5145cd; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 8px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .ai-loading-text { font-size: 12px; color: #5b21b6; font-weight: 600; }
-  .ky-list { background: #fff; border: 0.5px solid #d0d0c8; border-radius: 10px; overflow: hidden; margin-bottom: 6px; }
-  .ky-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-bottom: 0.5px solid #e0e0d8; cursor: pointer; }
-  .ky-item:last-child { border-bottom: none; }
-  .ky-item.selected { background: #f5f3ff; }
-  .ky-chk { width: 18px; height: 18px; border: 1.5px solid #d0d0c8; border-radius: 4px; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-  .ky-chk.on { background: #5145cd; border-color: #5145cd; color: #fff; font-size: 11px; font-weight: 700; }
-  .ky-num { font-size: 11px; color: #888; flex-shrink: 0; margin-top: 2px; min-width: 18px; }
-  .ky-text { font-size: 12px; color: #1a1a1a; line-height: 1.6; flex: 1; }
-  .ky-item.selected .ky-text { color: #3730a3; }
-  .ky-count { font-size: 10px; color: #888; text-align: right; margin-bottom: 4px; }
+  .multi-item { display: flex; gap: 8px; margin-bottom: 6px; align-items: flex-start; }
+  .multi-num { font-size: 13px; color: #888; flex-shrink: 0; padding-top: 9px; min-width: 16px; }
+  .multi-input { flex: 1; padding: 8px 10px; font-size: 13px; border: 0.5px solid #d0d0c8; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; }
+  .multi-input:focus { outline: none; border-color: #1a56db; }
+  .add-row-btn { width: 100%; padding: 8px; font-size: 12px; color: #1a56db; background: #eff6ff; border: 0.5px dashed #93c5fd; border-radius: 8px; cursor: pointer; margin-bottom: 10px; }
   .kt-table { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
   .kt-header { display: grid; grid-template-columns: 1fr 44px 44px 44px; padding: 6px 12px; background: #f5f5f0; border-bottom: 0.5px solid #e0e0d8; }
   .kt-header span { font-size: 10px; color: #888; font-weight: 700; text-align: center; }
@@ -66,53 +52,51 @@
   .kt-row:last-child { border-bottom: none; }
   .kt-row.total { background: #f5f5f0; }
   .kt-name { font-size: 12px; font-weight: 600; }
+  .kt-sub { font-size: 9px; color: #888; }
   .kt-num { font-size: 13px; font-weight: 700; text-align: center; }
   .num-in { color: #057a55; }
   .num-out { color: #c81e1e; }
   .num-cur { color: #1a56db; }
+  .toggle-row { display: flex; gap: 8px; }
+  .toggle-btn { flex: 1; padding: 10px; font-size: 12px; font-weight: 700; border-radius: 8px; border: 1.5px solid #d0d0c8; background: #fff; color: #888; cursor: pointer; text-align: center; }
+  .toggle-btn.on-green { background: #dcfce7; border-color: #057a55; color: #057a55; }
+  .toggle-btn.on-red { background: #fee2e2; border-color: #c81e1e; color: #c81e1e; }
+  .cl-list { background: #fff; border: 0.5px solid #d0d0c8; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
   .summary-card { background: #f5f5f0; border: 0.5px solid #e0e0d8; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
   .s-row { display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 0.5px solid #e0e0d8; }
   .s-row:last-child { border-bottom: none; }
   .s-label { color: #888; }
   .s-val { color: #1a1a1a; font-weight: 600; max-width: 220px; text-align: right; }
-  .ky-preview { background: #f5f3ff; border: 0.5px solid #c4b5fd; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
-  .ky-preview-title { font-size: 11px; font-weight: 700; color: #5145cd; margin-bottom: 6px; }
-  .ky-preview-item { font-size: 11px; color: #3730a3; padding: 2px 0; display: flex; gap: 5px; line-height: 1.5; }
   .footer { padding: 10px 16px 18px; border-top: 0.5px solid #e0e0d8; background: #fff; position: sticky; bottom: 0; display: flex; gap: 8px; }
   .btn-back { background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 10px; padding: 11px 16px; font-size: 13px; color: #666; cursor: pointer; }
   .btn-next { flex: 1; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; }
   .btn-blue { background: #1a56db; color: #fff; }
-  .btn-purple { background: #5145cd; color: #fff; }
   .btn-green { background: #057a55; color: #fff; }
   .complete-wrap { padding: 24px 16px; text-align: center; }
   .complete-icon { width: 64px; height: 64px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 14px; }
   .complete-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
   .complete-sub { font-size: 11px; color: #888; margin-bottom: 18px; line-height: 1.6; }
-  .output-card { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 8px; }
-  .output-icon { font-size: 22px; flex-shrink: 0; }
-  .output-name { font-size: 13px; font-weight: 700; color: #1a1a1a; }
-  .output-desc { font-size: 10px; color: #888; margin-top: 2px; }
   .btn-wide { width: 100%; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; margin-bottom: 8px; }
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- STEP 1 -->
+  <!-- STEP 1: 基本情報 -->
   <div id="s1" class="screen active">
     <div class="header">
       <div class="header-top">
         <a href="index.html" class="back-btn">← ホーム</a>
-        <span class="header-title">📋 安全日誌</span>
+        <span class="header-title">📋 工事・安全日誌</span>
         <span style="font-size:10px;color:#888;margin-left:auto;">1 / 4</span>
       </div>
-      <div class="header-sub">本日の基本情報を入力してください</div>
+      <div class="header-sub">基本情報を入力してください</div>
       <div class="step-bar" id="sb1"></div>
     </div>
     <div class="form-body">
       <div class="field">
-        <div class="field-label">案件 <span class="req">必須</span></div>
-        <select id="f-anken" onchange="fetchNyujoCount()">
+        <div class="field-label">案件（工事名）<span class="req">必須</span></div>
+        <select id="f-anken">
           <option value="">選択してください</option>
           <option>淀屋橋ゲートタワー工事</option>
           <option>なんばパークス改修工事</option>
@@ -129,135 +113,157 @@
         </div>
       </div>
       <div class="field-row">
-        <div class="field"><div class="field-label">気温（℃）</div><input type="number" id="f-temp" placeholder="例：28"></div>
-        <div class="field"><div class="field-label">作業責任者 <span class="req">必須</span></div><input type="text" id="f-sekinin" placeholder="例：佐藤 友和"></div>
+        <div class="field"><div class="field-label">最高気温（℃）</div><input type="number" id="f-temp-high" placeholder="例：28"></div>
+        <div class="field"><div class="field-label">最低気温（℃）</div><input type="number" id="f-temp-low" placeholder="例：21"></div>
       </div>
-      <div class="field"><div class="field-label">本日の入場者数 <span class="auto-b">自動</span></div><input type="text" id="f-nyujo-count" class="auto" readonly value="案件を選択すると自動取得"></div>
+      <div class="field"><div class="field-label">作業責任者（担当者）<span class="req">必須</span></div><input type="text" id="f-sekinin" placeholder="例：佐藤 友和"></div>
     </div>
-    <div class="footer"><button class="btn-next btn-blue" onclick="next1()">次へ → 作業内容・KY</button></div>
+    <div class="footer"><button class="btn-next btn-blue" onclick="next1()">次へ → 本日の作業</button></div>
   </div>
 
-  <!-- STEP 2 -->
+  <!-- STEP 2: 本日の作業・重点・行事 -->
   <div id="s2" class="screen">
     <div class="header">
       <div class="header-top">
         <button class="back-btn" onclick="goTo('s1')">← 戻る</button>
-        <span class="header-title">📋 安全日誌</span>
+        <span class="header-title">📋 工事・安全日誌</span>
         <span style="font-size:10px;color:#888;margin-left:auto;">2 / 4</span>
       </div>
-      <div class="header-sub">作業内容を入力してKY安全対策を生成します</div>
+      <div class="header-sub">本日の作業・災害防止重点・行事</div>
       <div class="step-bar" id="sb2"></div>
     </div>
     <div class="form-body">
-      <div class="field"><div class="field-label">本日の作業内容 <span class="req">必須</span></div><textarea id="f-sagyo" placeholder="例：22階 天井内電気配線工事・幹線引込作業"></textarea></div>
-      <div class="ai-box">
-        <div class="ai-box-title">✨ AI安全対策提案</div>
-        <div class="ai-box-desc">作業内容を入力して「生成する」を押すと、AIが作業に応じた安全対策を10個提案します。</div>
-        <button class="ai-gen-btn" id="ai-gen-btn" onclick="generateKY()">✨ AI安全対策を生成する</button>
+      <div class="sec-label">本日の作業</div>
+      <div id="sagyo-rows">
+        <div class="multi-item"><span class="multi-num">・</span><input type="text" class="multi-input sagyo-input" placeholder="例：北面 足場解体・廊下壁塗装"></div>
+        <div class="multi-item"><span class="multi-num">・</span><input type="text" class="multi-input sagyo-input" placeholder="例：22階 天井内電気配線工事"></div>
       </div>
-      <div class="ai-loading" id="ai-loading">
-        <div class="spinner"></div>
-        <div class="ai-loading-text" id="ai-loading-text">作業内容を解析中...</div>
+      <button class="add-row-btn" onclick="addRow('sagyo-rows','sagyo-input','例：作業内容を入力')">＋ 作業を追加</button>
+
+      <div class="sec-label">災害防止 本日の重点</div>
+      <div id="juten-rows">
+        <div class="multi-item"><span class="multi-num">・</span><input type="text" class="multi-input juten-input" placeholder="例：足場作業での墜落災害の防止"></div>
+        <div class="multi-item"><span class="multi-num">・</span><input type="text" class="multi-input juten-input" placeholder="例：足場からの物の落下防止"></div>
       </div>
-      <div id="ky-area" style="display:none;">
-        <div class="ky-count" id="ky-count">0個選択中（3〜5個推奨）</div>
-        <div class="ky-list" id="ky-list"></div>
-        <button style="font-size:11px;color:#5145cd;background:none;border:none;cursor:pointer;text-decoration:underline;margin-top:4px;" onclick="generateKY()">↺ 再生成する</button>
+      <button class="add-row-btn" onclick="addRow('juten-rows','juten-input','重点事項を入力')">＋ 重点を追加</button>
+
+      <div class="sec-label">本日の行事</div>
+      <div id="gyoji-rows">
+        <div class="multi-item"><span class="multi-num">・</span><input type="text" class="multi-input gyoji-input" placeholder="例：一斉清掃 13:00から"></div>
       </div>
-      <div class="field" style="margin-top:12px;"><div class="field-label">ヒヤリハット・特記事項（任意）</div><textarea id="f-hiyari" placeholder="例：高所作業中に工具を落としそうになった"></textarea></div>
+      <button class="add-row-btn" onclick="addRow('gyoji-rows','gyoji-input','行事を入力')">＋ 行事を追加</button>
     </div>
     <div class="footer">
       <button class="btn-back" onclick="goTo('s1')">← 戻る</button>
-      <button class="btn-next btn-purple" onclick="next2()">次へ → 人員集計</button>
+      <button class="btn-next btn-blue" onclick="next2()">次へ → 人員・確認事項</button>
     </div>
   </div>
 
-  <!-- STEP 3 -->
+  <!-- STEP 3: 工種別人員・来訪者・搬出入・確認事項 -->
   <div id="s3" class="screen">
     <div class="header">
       <div class="header-top">
         <button class="back-btn" onclick="goTo('s2')">← 戻る</button>
-        <span class="header-title">📋 安全日誌</span>
+        <span class="header-title">📋 工事・安全日誌</span>
         <span style="font-size:10px;color:#888;margin-left:auto;">3 / 4</span>
       </div>
-      <div class="header-sub">工種別人員・確認事項</div>
+      <div class="header-sub">工種別人員・来訪者・搬出入・確認事項</div>
       <div class="step-bar" id="sb3"></div>
     </div>
     <div class="form-body">
       <div class="sec-label">📊 工種別人員（入退場記録より自動集計）</div>
       <div class="kt-table" id="s3-kt-table">
-        <div class="kt-header"><span>工種</span><span>入場</span><span>退場</span><span>現在</span></div>
-        <div style="padding:16px;text-align:center;font-size:12px;color:#888;">読み込み中...</div>
+        <div class="kt-header"><span>工種 / 業者</span><span>入場</span><span>退場</span><span>現在</span></div>
+        <div style="padding:14px;text-align:center;font-size:12px;color:#888;">読み込み中...</div>
       </div>
 
-      <div class="sec-label" style="margin-top:10px;">📋 確認事項（自動集計）</div>
+      <div class="sec-label">来訪者</div>
+      <div class="field">
+        <textarea id="f-raihosha" placeholder="例：○○理事長・△△副理事長、大和建設○△工事部長"></textarea>
+      </div>
+
+      <div class="sec-label">搬出入（材料・機材）</div>
+      <div class="field">
+        <textarea id="f-hanshutsu" placeholder="例：建地枠・アンチ・筋交 搬出 4t 2台、アクリルシリコン樹脂塗料 15kg 8缶"></textarea>
+      </div>
+
+      <div class="sec-label">📋 確認事項（自動集計）</div>
       <div style="background:#fff;border:0.5px solid #e0e0d8;border-radius:10px;overflow:hidden;margin-bottom:10px;">
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:0.5px solid #e0e0d8;">
           <div>
             <div style="font-size:12px;font-weight:600;">安全・作業指示書</div>
             <div style="font-size:10px;color:#888;margin-top:1px;">本日のKY指示書提出枚数</div>
           </div>
-          <div style="font-size:16px;font-weight:700;color:#1a56db;" id="s3-ky-count">取得中...</div>
+          <div style="font-size:16px;font-weight:700;color:#1a56db;" id="s3-ky-count">-</div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:0.5px solid #e0e0d8;">
           <div>
             <div style="font-size:12px;font-weight:600;">安全誓約書（新規）</div>
             <div style="font-size:10px;color:#888;margin-top:1px;">本日の新規入場者数</div>
           </div>
-          <div style="font-size:16px;font-weight:700;color:#057a55;" id="s3-shinki-count">取得中...</div>
+          <div style="font-size:16px;font-weight:700;color:#057a55;" id="s3-shinki-count">-</div>
         </div>
         <div style="padding:10px 12px;">
-          <div style="font-size:12px;font-weight:600;margin-bottom:8px;">有資格者数（本日入場）</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px;">有資格者数（作業員マスタより）</div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
             <div style="background:#f5f5f0;border-radius:8px;padding:8px;text-align:center;">
               <div style="font-size:10px;color:#888;margin-bottom:4px;">玉掛け</div>
-              <div style="font-size:18px;font-weight:700;color:#1a1a1a;" id="s3-tamakake">-</div>
+              <div style="font-size:18px;font-weight:700;" id="s3-tamakake">-</div>
             </div>
             <div style="background:#f5f5f0;border-radius:8px;padding:8px;text-align:center;">
               <div style="font-size:10px;color:#888;margin-bottom:4px;">足場組立等</div>
-              <div style="font-size:18px;font-weight:700;color:#1a1a1a;" id="s3-ashiba">-</div>
+              <div style="font-size:18px;font-weight:700;" id="s3-ashiba">-</div>
             </div>
             <div style="background:#f5f5f0;border-radius:8px;padding:8px;text-align:center;">
               <div style="font-size:10px;color:#888;margin-bottom:4px;">有機溶剤</div>
-              <div style="font-size:18px;font-weight:700;color:#1a1a1a;" id="s3-yuki">-</div>
+              <div style="font-size:18px;font-weight:700;" id="s3-yuki">-</div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="sec-label">✅ 安全チェックリスト（作業前）</div>
-      <div class="ky-list" id="cl-list"></div>
+      <div class="sec-label">朝礼の実施</div>
+      <div class="field-row" style="margin-bottom:8px;">
+        <div class="field" style="margin-bottom:0;"><div class="field-label">開始</div><input type="time" id="f-chorei-start" value="08:00"></div>
+        <div class="field" style="margin-bottom:0;"><div class="field-label">終了</div><input type="time" id="f-chorei-end" value="08:30"></div>
+      </div>
+      <div class="toggle-row" style="margin-bottom:10px;">
+        <button class="toggle-btn" id="chorei-yes" onclick="setChorei('実施')">実施</button>
+        <button class="toggle-btn" id="chorei-no" onclick="setChorei('未実施')">未実施</button>
+      </div>
     </div>
     <div class="footer">
       <button class="btn-back" onclick="goTo('s2')">← 戻る</button>
-      <button class="btn-next btn-blue" onclick="goTo('s4')">次へ → 最終確認</button>
+      <button class="btn-next btn-blue" onclick="goTo('s4')">次へ → 安全点検</button>
     </div>
   </div>
 
-  <!-- STEP 4 -->
+  <!-- STEP 4: 安全点検チェックリスト・所見 -->
   <div id="s4" class="screen">
     <div class="header">
       <div class="header-top">
         <button class="back-btn" onclick="goTo('s3')">← 戻る</button>
-        <span class="header-title">📋 安全日誌</span>
+        <span class="header-title">📋 工事・安全日誌</span>
         <span style="font-size:10px;color:#888;margin-left:auto;">4 / 4</span>
       </div>
-      <div class="header-sub">内容を確認して送信してください</div>
+      <div class="header-sub">安全点検・所見・送信</div>
       <div class="step-bar" id="sb4"></div>
     </div>
     <div class="form-body">
-      <div class="sec-label">📋 基本情報</div>
-      <div class="summary-card" id="summary-basic"></div>
-      <div class="sec-label" style="margin-top:8px;">✨ KY安全指示</div>
-      <div class="ky-preview" id="ky-preview">
-        <div class="ky-preview-title">選択済みの安全対策</div>
-        <div id="ky-preview-items" style="font-size:11px;color:#888;">（STEP 2でKY安全対策を選択してください）</div>
+      <div class="sec-label">✅ 安全点検（○×で確認・×はメモ入力）</div>
+      <div class="cl-list" id="cl-list"></div>
+
+      <div class="sec-label">安全担当の所見</div>
+      <div class="field">
+        <textarea id="f-shoken" placeholder="例：朝礼にて足場解体の注意事項を説明した"></textarea>
       </div>
-      <div style="font-size:10px;color:#888;background:#f5f5f0;border-radius:6px;padding:8px 10px;">送信すると安全日誌・KY指示書がExcelで出力できるようになります</div>
+
+      <div class="sec-label">📋 入力内容の確認</div>
+      <div class="summary-card" id="summary-basic"></div>
     </div>
     <div class="footer">
       <button class="btn-back" onclick="goTo('s3')">← 戻る</button>
-      <button class="btn-next btn-green" onclick="submitForm()">送信して完了 ✓</button>
+      <button class="btn-next btn-green" id="btn-submit" onclick="submitForm()">送信して完了 ✓</button>
     </div>
   </div>
 
@@ -266,18 +272,8 @@
     <div class="complete-wrap">
       <div class="complete-icon">✅</div>
       <div class="complete-title">安全日誌を送信しました</div>
-      <div class="complete-sub">書類の出力ができるようになりました</div>
-      <div class="output-card" onclick="alert('Excel出力（実装予定）')">
-        <div class="output-icon">📊</div>
-        <div><div class="output-name">安全日誌を出力</div><div class="output-desc">Excel形式でダウンロード</div></div>
-        <span style="font-size:16px;color:#ccc;margin-left:auto;">›</span>
-      </div>
-      <div class="output-card" onclick="alert('KY指示書出力（実装予定）')">
-        <div class="output-icon">⛑</div>
-        <div><div class="output-name">KY安全作業指示書を出力</div><div class="output-desc">Excel形式でダウンロード</div></div>
-        <span style="font-size:16px;color:#ccc;margin-left:auto;">›</span>
-      </div>
-      <button class="btn-wide" style="background:#1a56db;color:#fff;" onclick="goTo('s1')">新しい日誌を作成する</button>
+      <div class="complete-sub">Google Sheetsに保存されました</div>
+      <button class="btn-wide" style="background:#1a56db;color:#fff;" onclick="location.href='nisshi.html'">新しい日誌を作成する</button>
       <a href="index.html" style="display:block;text-align:center;font-size:13px;color:#888;">ホームへ戻る</a>
     </div>
   </div>
@@ -285,7 +281,7 @@
 </div>
 <script src="api.js"></script>
 <script>
-  let selectedWeather='', kyItems=[], selectedKY=new Set();
+  let selectedWeather='', choreiStatus='';
   const now=new Date();
   const days=['日','月','火','水','木','金','土'];
   document.getElementById('f-date').value=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${days[now.getDay()]}）`;
@@ -299,8 +295,24 @@
   }
   renderSB(1);
 
-  // チェックリスト初期化
-  const clItems=['朝礼・KY活動を実施したか','作業員全員の体調確認を実施したか','保護具（ヘルメット・安全帯・安全靴）の着用確認をしたか','電動工具の絶縁検査・試運転を実施したか','作業エリアの立入禁止区域・養生の設置を確認したか','脚立・足場の点検を実施したか（ガタつき・損傷確認）','作業範囲について他業者・近隣への周知を行ったか'];
+  // 安全点検項目（元書類より抜粋）
+  const clItems=[
+    '現場内外の整理整頓',
+    '安全（作業）通路の確保',
+    '保護具・帽の着用',
+    '墜落制止用器具の使用',
+    '作業員の服装・不安全行動',
+    '消火器等の設置',
+    '資材の養生・保管',
+    '床端・開口部の処置（足場）',
+    '脚立の使用状況',
+    '電動工具の点検・受理証',
+    '電工ドラムは3芯（アース付）',
+    '立入禁止措置・誘導員配置',
+    '有資格者の資格書携帯',
+    '産業廃棄物分別・保管',
+    '有機溶剤の保管状況'
+  ];
   const clEl=document.getElementById('cl-list');
   const clState={};
   clItems.forEach((text,i)=>{
@@ -309,13 +321,13 @@
     div.innerHTML=`
       <div id="cl-${i}" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;">
         <div style="display:flex;gap:4px;flex-shrink:0;margin-top:2px;">
-          <div id="clok-${i}" onclick="setCL(${i},'ok')" style="width:28px;height:24px;border-radius:4px;border:1.5px solid #d0d0c8;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f5f5f0;color:#888;">良</div>
-          <div id="clng-${i}" onclick="setCL(${i},'ng')" style="width:28px;height:24px;border-radius:4px;border:1.5px solid #d0d0c8;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f5f5f0;color:#888;">否</div>
+          <div id="clok-${i}" onclick="setCL(${i},'ok')" style="width:28px;height:24px;border-radius:4px;border:1.5px solid #d0d0c8;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f5f5f0;color:#888;">○</div>
+          <div id="clng-${i}" onclick="setCL(${i},'ng')" style="width:28px;height:24px;border-radius:4px;border:1.5px solid #d0d0c8;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f5f5f0;color:#888;">×</div>
         </div>
         <div style="font-size:12px;color:#1a1a1a;line-height:1.6;flex:1;">${text}</div>
       </div>
       <div id="clnote-wrap-${i}" style="display:none;padding:0 12px 10px 12px;background:#fff7ed;">
-        <input type="text" id="clnote-${i}" placeholder="否の理由・対処内容を入力してください" style="width:100%;padding:6px 8px;font-size:11px;border:0.5px solid #fca5a5;border-radius:6px;background:#fff;color:#1a1a1a;font-family:inherit;box-sizing:border-box;">
+        <input type="text" id="clnote-${i}" placeholder="×の内容・処置を入力してください" style="width:100%;padding:6px 8px;font-size:11px;border:0.5px solid #fca5a5;border-radius:6px;background:#fff;color:#1a1a1a;font-family:inherit;box-sizing:border-box;">
       </div>
     `;
     clEl.appendChild(div);
@@ -327,22 +339,16 @@
     const ng=document.getElementById(`clng-${i}`);
     const item=document.getElementById(`cl-${i}`);
     const noteWrap=document.getElementById(`clnote-wrap-${i}`);
-    // 良ボタン
     ok.style.background=clState[i]==='ok'?'#057a55':'#f5f5f0';
     ok.style.color=clState[i]==='ok'?'#fff':'#888';
     ok.style.borderColor=clState[i]==='ok'?'#057a55':'#d0d0c8';
-    // 否ボタン
     ng.style.background=clState[i]==='ng'?'#c81e1e':'#f5f5f0';
     ng.style.color=clState[i]==='ng'?'#fff':'#888';
     ng.style.borderColor=clState[i]==='ng'?'#c81e1e':'#d0d0c8';
-    // 行の背景色
     item.style.background=clState[i]==='ok'?'#f0fdf4':clState[i]==='ng'?'#fff7ed':'';
-    // 否メモ欄の表示/非表示
     if(noteWrap){
       noteWrap.style.display=clState[i]==='ng'?'block':'none';
-      if(clState[i]==='ng'){
-        setTimeout(()=>document.getElementById(`clnote-${i}`)?.focus(),50);
-      }
+      if(clState[i]==='ng'){setTimeout(()=>document.getElementById(`clnote-${i}`)?.focus(),50);}
     }
   }
 
@@ -352,111 +358,26 @@
     window.scrollTo(0,0);
     const n=parseInt(id.replace('s',''));
     if(!isNaN(n))renderSB(n);
-    if(id==='s4')buildSummary();
     if(id==='s3')loadS3Data();
+    if(id==='s4')buildSummary();
   }
 
   function selWeather(btn,val){
     document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('sel'));
-    btn.classList.add('sel');
-    selectedWeather=val;
+    btn.classList.add('sel');selectedWeather=val;
   }
 
-  // 入退場記録から当日の入場者数を自動取得
-  async function fetchNyujoCount() {
-    const ankenId=document.getElementById('f-anken').value;
-    const countEl=document.getElementById('f-nyujo-count');
-    if(!ankenId){countEl.value='案件を選択すると自動取得';return;}
-    countEl.value='取得中...';
-    try {
-      const records=await fetchNyutaijo(ankenId,'');
-      const todayDate=new Date();
-      const todayJP=`${todayDate.getFullYear()}/${String(todayDate.getMonth()+1).padStart(2,'0')}/${String(todayDate.getDate()).padStart(2,'0')}`;
-      const todayISO=todayStr();
-      const todayRecords=records.filter(r=>{
-        const d=String(r['記録日']||'');
-        return d.startsWith(todayJP)||d.startsWith(todayISO);
-      });
-      const nyujoCount=todayRecords.filter(r=>r['種別']==='入場').length;
-      countEl.value=`${nyujoCount}名（本日入場）`;
-    } catch(e) {
-      countEl.value='取得できませんでした';
-      console.warn('入場者数取得エラー:',e);
-    }
+  function setChorei(val){
+    choreiStatus=val;
+    document.getElementById('chorei-yes').className='toggle-btn'+(val==='実施'?' on-green':'');
+    document.getElementById('chorei-no').className='toggle-btn'+(val==='未実施'?' on-red':'');
   }
 
-  // STEP3：入退場・KY・新規・有資格者を自動集計
-  async function loadS3Data() {
-    const ankenId = document.getElementById('f-anken').value;
-    const today = todayStr();
-
-    // 工種別人員集計（入退場記録から）
-    try {
-      const records = await fetchNyutaijo(ankenId, '');
-      const todayDate = new Date();
-      const todayJP = `${todayDate.getFullYear()}/${String(todayDate.getMonth()+1).padStart(2,'0')}/${String(todayDate.getDate()).padStart(2,'0')}`;
-      const todayRecs = records.filter(r => {
-        const d = String(r['記録日'] || '');
-        return d.startsWith(todayJP) || d.startsWith(today);
-      });
-
-      // 工種別集計
-      const sm = {};
-      todayRecs.forEach(r => {
-        const shoku = r['職種'] || 'その他';
-        if (!sm[shoku]) sm[shoku] = { in: 0, out: 0 };
-        if (r['種別'] === '入場') sm[shoku].in++;
-        else sm[shoku].out++;
-      });
-
-      let ti = 0, to = 0;
-      let kt = '<div class="kt-header"><span>工種</span><span>入場</span><span>退場</span><span>現在</span></div>';
-      Object.entries(sm).forEach(([s, c]) => {
-        const cur = c.in - c.out; ti += c.in; to += c.out;
-        kt += `<div class="kt-row"><div><div class="kt-name">${s}</div></div><div class="kt-num num-in">${c.in}</div><div class="kt-num num-out">${c.out}</div><div class="kt-num num-cur">${cur}</div></div>`;
-      });
-      if (Object.keys(sm).length === 0) {
-        kt += '<div style="padding:14px;text-align:center;font-size:12px;color:#888;">本日の入退場記録がありません</div>';
-      } else {
-        kt += `<div class="kt-row total"><div><div class="kt-name" style="color:#1a56db;">合計</div></div><div class="kt-num num-in" style="font-size:15px;">${ti}</div><div class="kt-num num-out" style="font-size:15px;">${to}</div><div class="kt-num num-cur" style="font-size:15px;">${ti-to}</div></div>`;
-      }
-      document.getElementById('s3-kt-table').innerHTML = kt;
-    } catch(e) {
-      document.getElementById('s3-kt-table').innerHTML = '<div style="padding:14px;text-align:center;font-size:12px;color:#888;">取得できませんでした</div>';
-    }
-
-    // KY指示書枚数（本日送信済み）
-    try {
-      const kyData = await getFromSheets('ky', { date: today });
-      document.getElementById('s3-ky-count').textContent = `${(kyData||[]).length}枚`;
-    } catch(e) { document.getElementById('s3-ky-count').textContent = '-'; }
-
-    // 新規入場者数（当日の作業員マスタ登録数）
-    try {
-      const workers = await getFromSheets('workers', { ankenId });
-      const todayWorkers = (workers||[]).filter(w => {
-        const d = String(w['入場日'] || '');
-        return d.includes(todayStr()) || d.includes(new Date().toLocaleDateString('ja-JP'));
-      });
-      document.getElementById('s3-shinki-count').textContent = `${todayWorkers.length}名`;
-    } catch(e) { document.getElementById('s3-shinki-count').textContent = '-'; }
-
-    // 有資格者数（作業員マスタの資格情報から）
-    try {
-      const workers = await getFromSheets('workers', { ankenId });
-      let tamakake = 0, ashiba = 0, yuki = 0;
-      (workers||[]).forEach(w => {
-        const shikaku = String(w['資格'] || '');
-        if (shikaku.includes('玉掛け')) tamakake++;
-        if (shikaku.includes('足場')) ashiba++;
-        if (shikaku.includes('有機溶剤')) yuki++;
-      });
-      document.getElementById('s3-tamakake').textContent = tamakake;
-      document.getElementById('s3-ashiba').textContent = ashiba;
-      document.getElementById('s3-yuki').textContent = yuki;
-    } catch(e) {
-      ['s3-tamakake','s3-ashiba','s3-yuki'].forEach(id => document.getElementById(id).textContent = '-');
-    }
+  function addRow(containerId,inputClass,placeholder){
+    const row=document.createElement('div');
+    row.className='multi-item';
+    row.innerHTML=`<span class="multi-num">・</span><input type="text" class="multi-input ${inputClass}" placeholder="${placeholder}">`;
+    document.getElementById(containerId).appendChild(row);
   }
 
   function next1(){
@@ -467,101 +388,135 @@
   }
 
   function next2(){
-    if(!document.getElementById('f-sagyo').value){alert('作業内容を入力してください');return;}
+    const sagyos=[...document.querySelectorAll('.sagyo-input')].map(i=>i.value.trim()).filter(Boolean);
+    if(sagyos.length===0){alert('本日の作業を入力してください');return;}
     goTo('s3');
   }
 
-  async function generateKY(){
-    const sagyo=document.getElementById('f-sagyo').value.trim();
-    if(!sagyo){alert('先に作業内容を入力してください');return;}
-    document.getElementById('ai-gen-btn').disabled=true;
-    document.getElementById('ai-loading').style.display='block';
-    document.getElementById('ky-area').style.display='none';
-    const texts=['作業内容を解析中...','リスクを洗い出し中...','安全対策を生成中...','もうすぐ完了です...'];
-    let li=0;
-    const lt=setInterval(()=>{li=(li+1)%texts.length;document.getElementById('ai-loading-text').textContent=texts[li];},1200);
+  // STEP3：自動集計
+  async function loadS3Data(){
+    const ankenId=document.getElementById('f-anken').value;
+    const today=todayStr();
+    const todayJP=`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
+
+    // 工種別人員（業者名も表示）
     try {
-      const items=await postToSheets('generateKY',{sagyo:sagyo});
-      kyItems=items;
-    } catch(e) {
-      console.error('KY生成エラー:',e);
-      alert('AI安全対策の生成に失敗しました。再度お試しください。');
-      kyItems=[];
-    } finally {
-      clearInterval(lt);
-      document.getElementById('ai-loading').style.display='none';
-      document.getElementById('ai-gen-btn').disabled=false;
-      selectedKY=new Set();
-      renderKYList();
+      const records=await fetchNyutaijo(ankenId,'');
+      const todayRecs=records.filter(r=>{
+        const d=String(r['記録日']||'');
+        return d.startsWith(todayJP)||d.startsWith(today);
+      });
+      const sm={};
+      todayRecs.forEach(r=>{
+        const key=(r['職種']||'その他')+'|'+(r['所属会社']||'');
+        if(!sm[key])sm[key]={in:0,out:0};
+        if(r['種別']==='入場')sm[key].in++;else sm[key].out++;
+      });
+      let ti=0,to=0;
+      let kt='<div class="kt-header"><span>工種 / 業者</span><span>入場</span><span>退場</span><span>現在</span></div>';
+      Object.entries(sm).forEach(([key,c])=>{
+        const [shoku,kaisha]=key.split('|');
+        const cur=c.in-c.out;ti+=c.in;to+=c.out;
+        kt+=`<div class="kt-row"><div><div class="kt-name">${shoku}</div><div class="kt-sub">${kaisha}</div></div><div class="kt-num num-in">${c.in}</div><div class="kt-num num-out">${c.out}</div><div class="kt-num num-cur">${cur}</div></div>`;
+      });
+      if(Object.keys(sm).length===0){
+        kt+='<div style="padding:14px;text-align:center;font-size:12px;color:#888;">本日の入退場記録がありません</div>';
+      } else {
+        kt+=`<div class="kt-row total"><div><div class="kt-name" style="color:#1a56db;">合計</div></div><div class="kt-num num-in" style="font-size:15px;">${ti}</div><div class="kt-num num-out" style="font-size:15px;">${to}</div><div class="kt-num num-cur" style="font-size:15px;">${ti-to}</div></div>`;
+      }
+      document.getElementById('s3-kt-table').innerHTML=kt;
+      window._ktData=sm;
+    } catch(e){
+      document.getElementById('s3-kt-table').innerHTML='<div style="padding:14px;text-align:center;font-size:12px;color:#888;">取得できませんでした</div>';
+    }
+
+    // KY指示書枚数
+    try {
+      const kyData=await getFromSheets('ky',{date:today});
+      const cnt=(kyData||[]).length;
+      document.getElementById('s3-ky-count').textContent=`${cnt}枚`;
+      window._kyCount=cnt;
+    } catch(e){document.getElementById('s3-ky-count').textContent='-';}
+
+    // 新規入場者数
+    try {
+      const workers=await getFromSheets('workers',{});
+      const todayWorkers=(workers||[]).filter(w=>{
+        const d=String(w['登録日時']||'');
+        return d.startsWith(todayJP);
+      });
+      document.getElementById('s3-shinki-count').textContent=`${todayWorkers.length}名`;
+      window._shinkiCount=todayWorkers.length;
+
+      // 有資格者数
+      let tamakake=0,ashiba=0,yuki=0;
+      (workers||[]).forEach(w=>{
+        const shikaku=String(w['資格']||'');
+        if(shikaku.includes('玉掛け'))tamakake++;
+        if(shikaku.includes('足場'))ashiba++;
+        if(shikaku.includes('有機溶剤'))yuki++;
+      });
+      document.getElementById('s3-tamakake').textContent=tamakake;
+      document.getElementById('s3-ashiba').textContent=ashiba;
+      document.getElementById('s3-yuki').textContent=yuki;
+      window._shikakuData={tamakake,ashiba,yuki};
+    } catch(e){
+      ['s3-shinki-count','s3-tamakake','s3-ashiba','s3-yuki'].forEach(id=>document.getElementById(id).textContent='-');
     }
   }
-
-  const nums=['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'];
-  function renderKYList(){
-    const list=document.getElementById('ky-list');
-    if(kyItems.length===0){list.innerHTML='';document.getElementById('ky-area').style.display='none';return;}
-    list.innerHTML=kyItems.map((item,i)=>{
-      const sel=selectedKY.has(i);
-      return `<div class="ky-item ${sel?'selected':''}" onclick="toggleKY(${i})"><div class="ky-chk ${sel?'on':''}">${sel?'✓':''}</div><div class="ky-num">${nums[i]}</div><div class="ky-text">${item}</div></div>`;
-    }).join('');
-    document.getElementById('ky-area').style.display='block';
-    const n=selectedKY.size;
-    const cnt=document.getElementById('ky-count');
-    cnt.textContent=`${n}個選択中（3〜5個推奨）`;
-    cnt.style.color=n>=3&&n<=5?'#057a55':n>5?'#c81e1e':'#888';
-  }
-
-  function toggleKY(i){if(selectedKY.has(i))selectedKY.delete(i);else selectedKY.add(i);renderKYList();}
 
   function buildSummary(){
     const anken=document.getElementById('f-anken').value;
-    const date=document.getElementById('f-date').value;
-    const temp=document.getElementById('f-temp').value;
-    const sekinin=document.getElementById('f-sekinin').value;
-    const sagyo=document.getElementById('f-sagyo').value;
-    const nyujoCount=document.getElementById('f-nyujo-count').value;
+    const sagyos=[...document.querySelectorAll('.sagyo-input')].map(i=>i.value.trim()).filter(Boolean);
     document.getElementById('summary-basic').innerHTML=`
       <div class="s-row"><span class="s-label">案件</span><span class="s-val">${anken}</span></div>
-      <div class="s-row"><span class="s-label">作業日</span><span class="s-val">${date}</span></div>
-      <div class="s-row"><span class="s-label">天気・気温</span><span class="s-val">${selectedWeather} ${temp?temp+'℃':''}</span></div>
-      <div class="s-row"><span class="s-label">作業責任者</span><span class="s-val">${sekinin}</span></div>
-      <div class="s-row"><span class="s-label">入場者数</span><span class="s-val">${nyujoCount}</span></div>
-      <div class="s-row"><span class="s-label">作業内容</span><span class="s-val">${sagyo.substring(0,30)}${sagyo.length>30?'...':''}</span></div>
+      <div class="s-row"><span class="s-label">作業日</span><span class="s-val">${document.getElementById('f-date').value}</span></div>
+      <div class="s-row"><span class="s-label">天気</span><span class="s-val">${selectedWeather} 最高${document.getElementById('f-temp-high').value||'-'}℃ / 最低${document.getElementById('f-temp-low').value||'-'}℃</span></div>
+      <div class="s-row"><span class="s-label">責任者</span><span class="s-val">${document.getElementById('f-sekinin').value}</span></div>
+      <div class="s-row"><span class="s-label">本日の作業</span><span class="s-val">${sagyos.length}件</span></div>
+      <div class="s-row"><span class="s-label">朝礼</span><span class="s-val">${choreiStatus||'未選択'}</span></div>
     `;
-    if(selectedKY.size===0){
-      document.getElementById('ky-preview-items').innerHTML='<span style="color:#888;">（STEP 2でKY安全対策を選択してください）</span>';
-    } else {
-      document.getElementById('ky-preview-items').innerHTML=[...selectedKY].sort().map(i=>`<div class="ky-preview-item"><span>${nums[i]}</span><span>${kyItems[i]}</span></div>`).join('');
-    }
   }
 
   async function submitForm(){
-    const btn=document.querySelector('#s4 .btn-next');
+    const btn=document.getElementById('btn-submit');
     showLoading(btn,'送信中...');
+
     const checkResult={};
     Object.keys(clState).forEach(i=>{
       const note=document.getElementById(`clnote-${i}`);
-      checkResult[clItems[i]]=clState[i]==='ng' && note?.value
-        ? `否：${note.value}`
-        : clState[i];
+      checkResult[clItems[i]]=clState[i]==='ng'&&note?.value?`×：${note.value}`:(clState[i]==='ok'?'○':'×');
     });
-    const kySelected=[...selectedKY].sort().map(i=>kyItems[i]);
+
     try {
       await saveNisshi({
         ankenId: document.getElementById('f-anken').value,
         date: document.getElementById('f-date').value,
         tenki: selectedWeather,
-        temp: document.getElementById('f-temp').value,
+        tempHigh: document.getElementById('f-temp-high').value,
+        tempLow: document.getElementById('f-temp-low').value,
         sekinin: document.getElementById('f-sekinin').value,
-        nyujoCount: document.getElementById('f-nyujo-count').value,
-        sagyo: document.getElementById('f-sagyo').value,
-        kyItems: kySelected,
-        hiyari: document.getElementById('f-hiyari').value,
+        sagyos: [...document.querySelectorAll('.sagyo-input')].map(i=>i.value.trim()).filter(Boolean),
+        jutens: [...document.querySelectorAll('.juten-input')].map(i=>i.value.trim()).filter(Boolean),
+        gyojis: [...document.querySelectorAll('.gyoji-input')].map(i=>i.value.trim()).filter(Boolean),
+        kotsu: JSON.stringify(window._ktData||{}),
+        raihosha: document.getElementById('f-raihosha').value,
+        hanshutsu: document.getElementById('f-hanshutsu').value,
+        choreiTime: `${document.getElementById('f-chorei-start').value}〜${document.getElementById('f-chorei-end').value}`,
+        chorei: choreiStatus,
+        kyCount: window._kyCount??'',
+        shinkiCount: window._shinkiCount??'',
+        tamakake: window._shikakuData?.tamakake??'',
+        ashiba: window._shikakuData?.ashiba??'',
+        yuki: window._shikakuData?.yuki??'',
         checklist: checkResult,
-        approvalStatus: '未承認'
+        shoken: document.getElementById('f-shoken').value
       });
-    } catch(e) {
+    } catch(e){
       console.warn('Sheets保存エラー:',e);
+      alert('保存に失敗しました：'+e.message);
+      hideLoading(btn);
+      return;
     }
     hideLoading(btn);
     goTo('s-done');
