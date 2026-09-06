@@ -98,8 +98,6 @@
         <div class="field-label">案件（工事名）<span class="req">必須</span></div>
         <select id="f-anken">
           <option value="">選択してください</option>
-          <option>淀屋橋ゲートタワー工事</option>
-          <option>なんばパークス改修工事</option>
         </select>
       </div>
       <div class="field"><div class="field-label">作業日 <span class="auto-b">自動</span></div><input type="text" id="f-date" class="auto" readonly></div>
@@ -521,6 +519,9 @@
     hideLoading(btn);
     goTo('s-done');
   }
+
+  // 案件プルダウンをSheetsから取得
+  populateAnkenSelect('f-anken');
 </script>
 </body>
 </html>

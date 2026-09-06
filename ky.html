@@ -112,19 +112,14 @@
     <div class="form-body">
       <div class="field">
         <div class="field-label">現場名 <span class="req">必須</span></div>
-        <select id="f-genba">
+        <select id="f-genba" onchange="populateGyoshaSelect('f-gyosha', this.value)">
           <option value="">選択してください</option>
-          <option>淀屋橋ゲートタワー工事</option>
-          <option>なんばパークス改修工事</option>
         </select>
       </div>
       <div class="field">
         <div class="field-label">業者名 <span class="req">必須</span></div>
         <select id="f-gyosha">
-          <option value="">選択してください</option>
-          <option>好竹エンジニアリング株式会社</option>
-          <option>山下電気</option>
-          <option>協力会社C</option>
+          <option value="">先に現場名を選択</option>
         </select>
       </div>
       <div class="field-row">
@@ -533,6 +528,9 @@
     document.getElementById('done-sub').textContent=`${gyosha}\n${genba}\nKY対策 ${selectedKY.size}項目・署名者 ${signedCount}名`;
     goTo('s-done');
   }
+
+  // 現場プルダウンをSheetsから取得
+  populateAnkenSelect('f-genba');
 </script>
 </body>
 </html>

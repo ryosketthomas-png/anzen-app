@@ -129,8 +129,6 @@
       <div class="anken-label">案件を選択</div>
       <select class="anken" id="sel-anken" onchange="updateLog()">
         <option value="">選択してください</option>
-        <option value="yodo">淀屋橋ゲートタワー工事</option>
-        <option value="namba">なんばパークス改修工事</option>
       </select>
       <div class="action-cards">
         <div class="action-card in" onclick="startRecord('入場')">
@@ -388,5 +386,6 @@
   }
 </script>
 <script src="api.js"></script>
+<script>populateAnkenSelect('sel-anken');</script>
 </body>
 </html>

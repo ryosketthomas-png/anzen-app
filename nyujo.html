@@ -209,8 +209,12 @@
     </div>
     <div class="form-body">
       <div class="field">
+        <div class="field-label">入場する現場（案件）<span class="req">必須</span></div>
+        <select id="f-anken" onchange="populateGyoshaSelect('f-kaisha', this.value)"><option value="">選択してください</option></select>
+      </div>
+      <div class="field">
         <div class="field-label">所属会社 <span class="req">必須</span></div>
-        <select id="f-kaisha"><option value="">選択してください</option><option>好竹エンジニアリング株式会社（1次）</option><option>山下電気（2次）</option><option>協力会社C（3次）</option></select>
+        <select id="f-kaisha"><option value="">先に現場を選択</option></select>
       </div>
       <div class="field">
         <div class="field-label">職種 <span class="req">必須</span></div>
@@ -547,6 +551,7 @@
         age: document.getElementById('f-age').value,
         ketsueki: document.querySelector('#g-ketsueki .on')?.textContent||'',
         jusho: document.getElementById('f-jusho').value,
+        ankenId: document.getElementById('f-anken').value,
         kaisha: document.getElementById('f-kaisha').value,
         jisu: (document.getElementById('f-kaisha').value.match(/（(.+?)次）/)||[])[1]||'',
         shokushu: document.querySelector('#g-shokushu .on')?.textContent||'',
@@ -580,5 +585,6 @@
   }
 </script>
 <script src="api.js"></script>
+<script>populateAnkenSelect('f-anken');</script>
 </body>
 </html>

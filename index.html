@@ -66,9 +66,8 @@
     </div>
 
     <div class="anken-label">現在の案件</div>
-    <select>
-      <option>淀屋橋ゲートタワー工事</option>
-      <option>なんばパークス改修工事</option>
+    <select id="top-anken">
+      <option value="">案件を選択</option>
     </select>
 
     <div class="sec-title">📱 現場入力メニュー</div>
@@ -175,5 +174,7 @@
     document.getElementById('modal').classList.remove('active');
   }
 </script>
+<script src="api.js"></script>
+<script>populateAnkenSelect('top-anken');</script>
 </body>
 </html>

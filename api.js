@@ -4,7 +4,7 @@
 // ===================================================
 
 // ⚠️ ここにGoogle Apps ScriptのデプロイURLを貼り付けてください
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyPixJZWnLQMbrlfm2uR-hIX1A8_lw6rvpl7nsBbvO2rPQD8P8BaSKFXUn4p8ERUvom/exec';
+const GAS_URL = 'YOUR_GAS_DEPLOY_URL_HERE';
 
 // ===================================================
 // 共通送信関数
@@ -96,6 +96,61 @@ async function fetchNyutaijo(ankenId, date) {
 // 安全日誌一覧取得
 async function fetchNisshi(ankenId) {
   return await getFromSheets('nisshi', { ankenId });
+}
+
+// ===================================================
+// プルダウン動的生成（案件・協力会社）
+// ===================================================
+
+// 案件一覧をキャッシュ付きで取得
+let _ankenCache = null;
+async function getAnkenCached() {
+  if (_ankenCache) return _ankenCache;
+  _ankenCache = await fetchAnkenList();
+  return _ankenCache;
+}
+
+// 案件プルダウンをSheetsから生成
+// 使い方: populateAnkenSelect('f-anken')
+async function populateAnkenSelect(selectId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  try {
+    const list = await getAnkenCached();
+    // 先頭のプレースホルダ以外を削除
+    while (sel.options.length > 1) sel.remove(1);
+    (list || []).forEach(a => {
+      const name = a['工事名称'];
+      if (!name) return;
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    console.warn('案件一覧の取得に失敗:', e);
+  }
+}
+
+// 協力会社プルダウンを指定案件から生成
+// 使い方: populateGyoshaSelect('f-gyosha', '淀屋橋ゲートタワー工事')
+async function populateGyoshaSelect(selectId, kojimeiName) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  try {
+    const list = await getAnkenCached();
+    const anken = (list || []).find(a => a['工事名称'] === kojimeiName);
+    while (sel.options.length > 1) sel.remove(1);
+    if (!anken) return;
+    String(anken['協力会社'] || '').split('\n').filter(Boolean).forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = k;
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    console.warn('協力会社の取得に失敗:', e);
+  }
 }
 
 // ===================================================

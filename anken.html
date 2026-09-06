@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>案件登録 | 安全書類管理</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 14px; }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .header { background: #fff; border-bottom: 0.5px solid #e0e0d8; padding: 10px 16px; position: sticky; top: 0; z-index: 10; }
+  .header-top { display: flex; align-items: center; gap: 8px; }
+  .back-btn { background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 6px; padding: 4px 8px; font-size: 11px; color: #666; cursor: pointer; text-decoration: none; }
+  .header-title { font-size: 14px; font-weight: 700; }
+  .header-sub { font-size: 10px; color: #888; margin-top: 3px; }
+  .body { padding: 16px; }
+  .form-body { padding: 16px; }
+  .sec-label { font-size: 11px; font-weight: 700; color: #666; background: #f5f5f0; border-left: 3px solid #1a56db; padding: 4px 10px; border-radius: 0 4px 4px 0; margin-bottom: 10px; margin-top: 14px; }
+  .sec-label:first-child { margin-top: 0; }
+  .field { margin-bottom: 10px; }
+  .field-label { font-size: 11px; color: #888; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+  .req { color: #dc2626; font-size: 10px; }
+  input[type="text"], input[type="date"], select {
+    width: 100%; padding: 9px 10px; font-size: 13px; border: 0.5px solid #d0d0c8;
+    border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit;
+  }
+  input:focus, select:focus { outline: none; border-color: #1a56db; }
+  .field-row { display: flex; gap: 8px; }
+  .field-row .field { flex: 1; }
+  .kyoryoku-item { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+  .kyoryoku-item input { flex: 1; padding: 8px 10px; font-size: 13px; border: 0.5px solid #d0d0c8; border-radius: 8px; background: #fff; font-family: inherit; }
+  .kyoryoku-item select { width: 80px; padding: 8px 6px; font-size: 12px; }
+  .kyoryoku-del { font-size: 14px; color: #c81e1e; background: none; border: none; cursor: pointer; padding: 4px; flex-shrink: 0; }
+  .add-row-btn { width: 100%; padding: 8px; font-size: 12px; color: #1a56db; background: #eff6ff; border: 0.5px dashed #93c5fd; border-radius: 8px; cursor: pointer; margin-bottom: 10px; }
+  .anken-card { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+  .anken-name { font-size: 14px; font-weight: 700; }
+  .anken-tatemono { font-size: 11px; color: #888; margin-top: 2px; }
+  .anken-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .meta-tag { font-size: 10px; background: #f5f5f0; border: 0.5px solid #e0e0d8; border-radius: 99px; padding: 2px 8px; color: #666; }
+  .empty-box { padding: 24px; text-align: center; font-size: 12px; color: #888; background: #fff; border: 0.5px solid #e0e0d8; border-radius: 12px; margin-bottom: 10px; }
+  .footer { padding: 10px 16px 18px; border-top: 0.5px solid #e0e0d8; background: #fff; position: sticky; bottom: 0; display: flex; gap: 8px; }
+  .btn-back { background: #f5f5f0; border: 0.5px solid #d0d0c8; border-radius: 10px; padding: 11px 16px; font-size: 13px; color: #666; cursor: pointer; }
+  .btn-save { flex: 1; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; background: #1a56db; color: #fff; }
+  .btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-wide { width: 100%; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; margin-bottom: 8px; background: #1a56db; color: #fff; }
+  .complete-wrap { padding: 24px 16px; text-align: center; }
+  .complete-icon { width: 64px; height: 64px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 14px; }
+  .complete-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .complete-sub { font-size: 11px; color: #888; margin-bottom: 18px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 一覧 -->
+  <div id="s-list" class="screen active">
+    <div class="header">
+      <div class="header-top">
+        <a href="index.html" class="back-btn">← ホーム</a>
+        <span class="header-title">🏗 案件登録</span>
+      </div>
+      <div class="header-sub">登録済みの案件一覧・新規登録</div>
+    </div>
+    <div class="body">
+      <button class="btn-wide" onclick="showForm()">＋ 新しい案件を登録する</button>
+      <div class="sec-label" style="margin-top:6px;">📁 登録済み案件</div>
+      <div id="anken-list">
+        <div class="empty-box">読み込み中...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 登録フォーム -->
+  <div id="s-form" class="screen">
+    <div class="header">
+      <div class="header-top">
+        <button class="back-btn" onclick="showList()">← 一覧へ</button>
+        <span class="header-title">🏗 新規案件登録</span>
+      </div>
+      <div class="header-sub">工事情報を入力してください</div>
+    </div>
+    <div class="form-body">
+      <div class="sec-label">基本情報</div>
+      <div class="field">
+        <div class="field-label">建物名（マンション名）<span class="req">必須</span></div>
+        <input type="text" id="f-tatemono" placeholder="例：ライオンズマンション淀屋橋">
+      </div>
+      <div class="field">
+        <div class="field-label">工事名称 <span class="req">必須</span></div>
+        <input type="text" id="f-kojimei" placeholder="例：淀屋橋ゲートタワー大規模修繕工事">
+      </div>
+      <div class="field">
+        <div class="field-label">現場住所</div>
+        <input type="text" id="f-jusho" placeholder="例：大阪市中央区北浜3-2-1">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <div class="field-label">着工日 <span class="req">必須</span></div>
+          <input type="date" id="f-chakko">
+        </div>
+        <div class="field">
+          <div class="field-label">竣工日（予定）<span class="req">必須</span></div>
+          <input type="date" id="f-shunko">
+        </div>
+      </div>
+
+      <div class="sec-label">体制</div>
+      <div class="field">
+        <div class="field-label">発注会社</div>
+        <input type="text" id="f-hatchusha" value="大和ライフネクスト株式会社">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <div class="field-label">担当部署</div>
+          <input type="text" id="f-busho" placeholder="例：建装事業部">
+        </div>
+        <div class="field">
+          <div class="field-label">担当者名</div>
+          <input type="text" id="f-tanto" placeholder="例：池上 良介">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">教育担当者（新規入場教育）</div>
+        <input type="text" id="f-kyoiku" placeholder="例：佐藤 友和">
+      </div>
+
+      <div class="sec-label">協力会社（KYや入退場の業者選択に反映）</div>
+      <div id="kyoryoku-rows">
+        <div class="kyoryoku-item">
+          <input type="text" value="好竹エンジニアリング株式会社" placeholder="会社名">
+          <select><option>1次</option><option selected>1次</option><option>2次</option><option>3次</option></select>
+          <button class="kyoryoku-del" onclick="this.parentElement.remove()">✕</button>
+        </div>
+      </div>
+      <button class="add-row-btn" onclick="addKyoryoku()">＋ 協力会社を追加</button>
+    </div>
+    <div class="footer">
+      <button class="btn-back" onclick="showList()">← 戻る</button>
+      <button class="btn-save" id="btn-save" onclick="saveAnkenForm()">登録する ✓</button>
+    </div>
+  </div>
+
+  <!-- 完了 -->
+  <div id="s-done" class="screen">
+    <div class="complete-wrap">
+      <div class="complete-icon">✅</div>
+      <div class="complete-title">案件を登録しました</div>
+      <div class="complete-sub" id="done-sub"></div>
+      <button class="btn-wide" onclick="showList(true)">案件一覧に戻る</button>
+      <a href="index.html" style="display:block;text-align:center;font-size:13px;color:#888;margin-top:8px;">ホームへ戻る</a>
+    </div>
+  </div>
+
+</div>
+<script src="api.js"></script>
+<script>
+  function show(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0,0);
+  }
+  function showForm(){show('s-form');}
+  function showList(reload){show('s-list');if(reload)loadAnkenList();}
+
+  // 一覧読み込み
+  async function loadAnkenList(){
+    const listEl=document.getElementById('anken-list');
+    listEl.innerHTML='<div class="empty-box">読み込み中...</div>';
+    try {
+      const data=await fetchAnkenList();
+      if(!data||data.length===0){
+        listEl.innerHTML='<div class="empty-box">まだ案件が登録されていません<br>「新しい案件を登録する」から追加してください</div>';
+        return;
+      }
+      listEl.innerHTML=[...data].reverse().map(a=>{
+        const kyoryoku=String(a['協力会社']||'').split('\n').filter(Boolean);
+        return `<div class="anken-card">
+          <div class="anken-name">${a['工事名称']||''}</div>
+          <div class="anken-tatemono">${a['建物名']||''}${a['現場住所']?' / '+a['現場住所']:''}</div>
+          <div class="anken-meta">
+            <span class="meta-tag">📅 ${fmtDate(a['着工日'])}〜${fmtDate(a['竣工日'])}</span>
+            ${a['担当者名']?`<span class="meta-tag">👤 ${a['担当者名']}</span>`:''}
+            <span class="meta-tag">🏢 協力会社 ${kyoryoku.length}社</span>
+          </div>
+        </div>`;
+      }).join('');
+    } catch(e){
+      listEl.innerHTML='<div class="empty-box">読み込みに失敗しました。<br>通信環境を確認して再読み込みしてください。</div>';
+    }
+  }
+  function fmtDate(v){
+    if(!v)return '未定';
+    const s=String(v);
+    const d=new Date(s);
+    if(isNaN(d))return s.substring(0,10);
+    return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+  }
+  loadAnkenList();
+
+  function addKyoryoku(){
+    const row=document.createElement('div');
+    row.className='kyoryoku-item';
+    row.innerHTML=`<input type="text" placeholder="会社名"><select><option>1次</option><option>2次</option><option>3次</option><option>4次</option></select><button class="kyoryoku-del" onclick="this.parentElement.remove()">✕</button>`;
+    document.getElementById('kyoryoku-rows').appendChild(row);
+  }
+
+  async function saveAnkenForm(){
+    const tatemono=document.getElementById('f-tatemono').value.trim();
+    const kojimei=document.getElementById('f-kojimei').value.trim();
+    const chakko=document.getElementById('f-chakko').value;
+    const shunko=document.getElementById('f-shunko').value;
+    if(!tatemono){alert('建物名を入力してください');return;}
+    if(!kojimei){alert('工事名称を入力してください');return;}
+    if(!chakko||!shunko){alert('着工日・竣工日を入力してください');return;}
+
+    // 協力会社を「会社名（N次）」形式で収集
+    const kyoryoku=[...document.querySelectorAll('.kyoryoku-item')].map(row=>{
+      const name=row.querySelector('input').value.trim();
+      const jisu=row.querySelector('select').value;
+      return name?`${name}（${jisu}）`:null;
+    }).filter(Boolean);
+
+    const btn=document.getElementById('btn-save');
+    showLoading(btn,'登録中...');
+    try {
+      await postToSheets('anken',{
+        tatemono,kojimei,
+        jusho:document.getElementById('f-jusho').value,
+        chakko,shunko,
+        hatchusha:document.getElementById('f-hatchusha').value,
+        busho:document.getElementById('f-busho').value,
+        tanto:document.getElementById('f-tanto').value,
+        kyoiku:document.getElementById('f-kyoiku').value,
+        kyoryoku
+      });
+      document.getElementById('done-sub').textContent=`${kojimei} を登録しました。全画面の案件プルダウンに反映されます。`;
+      show('s-done');
+    } catch(e){
+      alert('登録に失敗しました：'+e.message);
+    } finally {
+      hideLoading(btn);
+    }
+  }
+</script>
+</body>
+</html>
