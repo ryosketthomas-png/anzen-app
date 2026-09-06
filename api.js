@@ -4,7 +4,7 @@
 // ===================================================
 
 // ⚠️ ここにGoogle Apps ScriptのデプロイURLを貼り付けてください
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyPixJZWnLQMbrlfm2uR-hIX1A8_lw6rvpl7nsBbvO2rPQD8P8BaSKFXUn4p8ERUvom/exec';
+const GAS_URL = 'YOUR_GAS_DEPLOY_URL_HERE';
 
 // ===================================================
 // 共通送信関数
@@ -137,12 +137,26 @@ async function populateAnkenSelect(selectId) {
 async function populateGyoshaSelect(selectId, kojimeiName) {
   const sel = document.getElementById(selectId);
   if (!sel) return;
+  while (sel.options.length > 1) sel.remove(1);
+  if (!kojimeiName) return;
   try {
     const list = await getAnkenCached();
-    const anken = (list || []).find(a => a['工事名称'] === kojimeiName);
-    while (sel.options.length > 1) sel.remove(1);
-    if (!anken) return;
-    String(anken['協力会社'] || '').split('\n').filter(Boolean).forEach(k => {
+    const anken = (list || []).find(a => String(a['工事名称'] || '').trim() === String(kojimeiName).trim());
+    if (!anken) {
+      console.warn('案件が見つかりません:', kojimeiName);
+      return;
+    }
+    const kyoryoku = String(anken['協力会社'] || '').split('\n').map(s => s.trim()).filter(Boolean);
+    if (kyoryoku.length === 0) {
+      // 協力会社未登録の案件：分かるようにメッセージを表示
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = '（この案件に協力会社が未登録です）';
+      opt.disabled = true;
+      sel.appendChild(opt);
+      return;
+    }
+    kyoryoku.forEach(k => {
       const opt = document.createElement('option');
       opt.value = k;
       opt.textContent = k;
