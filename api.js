@@ -4,7 +4,7 @@
 // ===================================================
 
 // ⚠️ ここにGoogle Apps ScriptのデプロイURLを貼り付けてください
-const GAS_URL = 'YOUR_GAS_DEPLOY_URL_HERE';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyPixJZWnLQMbrlfm2uR-hIX1A8_lw6rvpl7nsBbvO2rPQD8P8BaSKFXUn4p8ERUvom/exec';
 
 // ===================================================
 // 共通送信関数
