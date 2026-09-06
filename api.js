@@ -190,6 +190,21 @@ function todayStr() {
   return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
 }
 
+// 日付値が「今日」かどうかを形式に依存せず判定
+// 対応: "2026/9/6" "2026/09/06" "2026-09-06" "2026年9月6日（日）" ISO文字列(UTC) など
+function isTodayDate(value) {
+  if (!value) return false;
+  const s = String(value);
+  const n = new Date();
+  const jp = `${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日`;
+  if (s.includes(jp)) return true;
+  const dt = new Date(s);
+  if (isNaN(dt)) return false;
+  return dt.getFullYear() === n.getFullYear()
+    && dt.getMonth() === n.getMonth()
+    && dt.getDate() === n.getDate();
+}
+
 // 現在時刻文字列（HH:MM）
 function nowTimeStr() {
   const n = new Date();

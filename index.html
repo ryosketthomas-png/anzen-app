@@ -86,7 +86,7 @@
           <div class="menu-name">入退場記録</div>
           <div class="menu-desc">毎日の入退場を記録</div>
         </div>
-        <span class="menu-badge badge-new">在場8名</span>
+        <span class="menu-badge badge-new" id="badge-zaijo" style="display:none;"></span>
         <div class="menu-arrow">›</div>
       </a>
       <a class="menu-card" href="nisshi.html">
@@ -111,7 +111,6 @@
           <div class="menu-name">承認（主任・上司）</div>
           <div class="menu-desc">安全日誌の最終承認</div>
         </div>
-        <span class="menu-badge badge-wait">承認待2件</span>
         <div class="menu-arrow">›</div>
       </a>
     </div>
@@ -175,6 +174,27 @@
   }
 </script>
 <script src="api.js"></script>
-<script>populateAnkenSelect('top-anken');</script>
+<script>
+  populateAnkenSelect('top-anken');
+  // 案件選択で在場人数バッジを更新
+  document.getElementById('top-anken').addEventListener('change', async function(){
+    const badge = document.getElementById('badge-zaijo');
+    const anken = this.value;
+    if (!anken) { badge.style.display = 'none'; return; }
+    badge.style.display = 'inline-block';
+    badge.textContent = '集計中...';
+    try {
+      const recs = await fetchNyutaijo(anken, '');
+      let inCnt = 0, outCnt = 0;
+      (recs || []).forEach(r => {
+        if (!isTodayDate(r['記録日'])) return;
+        if (r['種別'] === '入場') inCnt++; else outCnt++;
+      });
+      badge.textContent = `在場 ${inCnt - outCnt}名`;
+    } catch(e) {
+      badge.style.display = 'none';
+    }
+  });
+</script>
 </body>
 </html>

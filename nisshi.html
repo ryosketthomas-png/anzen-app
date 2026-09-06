@@ -400,10 +400,7 @@
     // 工種別人員（協力会社も表示）
     try {
       const records=await fetchNyutaijo(ankenId,'');
-      const todayRecs=records.filter(r=>{
-        const d=String(r['記録日']||'');
-        return d.startsWith(todayJP)||d.startsWith(today);
-      });
+      const todayRecs=records.filter(r=>isTodayDate(r['記録日']));
       const sm={};
       todayRecs.forEach(r=>{
         const key=(r['職種']||'その他')+'|'+(r['所属会社']||'');
@@ -428,10 +425,10 @@
       document.getElementById('s3-kt-table').innerHTML='<div style="padding:14px;text-align:center;font-size:12px;color:#888;">取得できませんでした</div>';
     }
 
-    // KY指示書枚数
+    // KY指示書枚数（当日分のみ）
     try {
       const kyData=await getFromSheets('ky',{date:today});
-      const cnt=(kyData||[]).length;
+      const cnt=(kyData||[]).filter(k=>isTodayDate(k['作業日'])).length;
       document.getElementById('s3-ky-count').textContent=`${cnt}枚`;
       window._kyCount=cnt;
     } catch(e){document.getElementById('s3-ky-count').textContent='-';}
@@ -439,10 +436,7 @@
     // 新規入場者数
     try {
       const workers=await getFromSheets('workers',{});
-      const todayWorkers=(workers||[]).filter(w=>{
-        const d=String(w['登録日時']||'');
-        return d.startsWith(todayJP);
-      });
+      const todayWorkers=(workers||[]).filter(w=>isTodayDate(w['登録日時']));
       document.getElementById('s3-shinki-count').textContent=`${todayWorkers.length}名`;
       window._shinkiCount=todayWorkers.length;
 

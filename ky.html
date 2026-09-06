@@ -345,8 +345,9 @@
     try {
       const genba=document.getElementById('f-genba').value;
       const data=await getFromSheets('genki',{date:todayStr(),genba});
-      if(data&&data.length>0){
-        const latest=data[data.length-1];
+      const todayData=(data||[]).filter(d=>isTodayDate(d['作業日']));
+      if(todayData.length>0){
+        const latest=todayData[todayData.length-1];
         const items=(latest['指示事項']||'').split('\n').filter(Boolean);
         document.getElementById('genki-shiji-list').innerHTML=items.map(item=>
           `<div style="display:flex;gap:8px;padding:9px 12px;border-bottom:0.5px solid #e0e0d8;font-size:12px;color:#1a1a1a;">

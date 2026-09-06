@@ -117,8 +117,9 @@
     try {
       const today = todayStr();
       const data = await getFromSheets('genki', { date: today });
-      if (data && data.length > 0) {
-        const latest = data[data.length - 1];
+      const todayData = (data || []).filter(d => isTodayDate(d['作業日']));
+      if (todayData.length > 0) {
+        const latest = todayData[todayData.length - 1];
         showSaved(latest);
       }
     } catch(e) {
