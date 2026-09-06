@@ -217,16 +217,8 @@
 
 </div>
 <script>
-  const workers=[
-    {id:1,name:'大和 太郎',kana:'だいわ たろう',kaisha:'サンプル電気工事株式会社',jisu:'1次',shokushu:'電工'},
-    {id:2,name:'大和 太郎',kana:'だいわ たろう',kaisha:'サンプル電気工事株式会社',jisu:'1次',shokushu:'現場管理'},
-    {id:3,name:'大和 太郎',kana:'だいわ たろう',kaisha:'サンプル電気工事株式会社',jisu:'1次',shokushu:'電工'},
-    {id:4,name:'大和 太郎',kana:'だいわ たろう',kaisha:'サンプル電気工事株式会社',jisu:'1次',shokushu:'電工'},
-    {id:5,name:'大和 太郎',kana:'だいわ たろう',kaisha:'サンプル電気工事株式会社',jisu:'1次',shokushu:'電工'},
-    {id:6,name:'大和 太郎',kana:'だいわ たろう',kaisha:'サンプル設備株式会社',jisu:'2次',shokushu:'設備'},
-    {id:7,name:'大和 太郎',kana:'だいわ たろう',kaisha:'サンプル内装株式会社',jisu:'3次',shokushu:'内装'},
-    {id:8,name:'大和 太郎',kana:'だいわ たろう',kaisha:'サンプル内装株式会社',jisu:'3次',shokushu:'内装'},
-  ];
+  // 作業員はSheetsの作業員マスタから取得（案件選択時）
+  let workers=[];
   let logs=[],selectedWorker=null,currentType='';
   const now=new Date();
   const days=['日','月','火','水','木','金','土'];
@@ -268,12 +260,15 @@
     const q=val.toLowerCase();
     const matched=workers.filter(w=>w.name.includes(val)||w.kana.includes(q)||w.name.replace(/\s/g,'').includes(val.replace(/\s/g,''))||w.kaisha.includes(val));
     if(matched.length===0){
-      list.innerHTML='<div class="no-result">該当する作業員が見つかりません<br><span style="font-size:10px;">新規入場登録が必要な場合があります</span></div>';
+      const msg=workers.length===0
+        ?'この案件に登録済みの作業員がいません<br><span style="font-size:10px;">先に新規入場者登録を行ってください</span>'
+        :'該当する作業員が見つかりません<br><span style="font-size:10px;">新規入場登録が必要な場合があります</span>';
+      list.innerHTML=`<div class="no-result">${msg}</div>`;
     } else {
       const esc=val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
       list.innerHTML=matched.map(w=>{
         const hi=w.name.replace(new RegExp(esc,'g'),s=>`<span class="highlight">${s}</span>`);
-        return `<div class="candidate-item" onclick="selectWorker(${w.id})"><div class="c-avatar">${w.name.charAt(0)}</div><div><div class="c-name">${hi}</div><div class="c-sub">${w.kaisha} / ${w.shokushu} / ${w.jisu}</div></div></div>`;
+        return `<div class="candidate-item" onclick="selectWorker('${w.id}')"><div class="c-avatar">${w.name.charAt(0)}</div><div><div class="c-name">${hi}</div><div class="c-sub">${w.kaisha} / ${w.shokushu} / ${w.jisu}</div></div></div>`;
       }).join('');
     }
     list.style.display='block';
@@ -317,7 +312,7 @@
       // Google Sheetsに保存
       await saveNyutaijo({
         ankenId: ankenId,
-        workerId: 'WRK-' + selectedWorker.id,
+        workerId: selectedWorker.id,
         name: selectedWorker.name,
         kaisha: selectedWorker.kaisha,
         shokushu: selectedWorker.shokushu,
@@ -330,7 +325,7 @@
       console.warn('Sheets保存エラー（ローカルには記録済み）:', e);
     }
 
-    logs.push({workerId:selectedWorker.id,type:currentType,time:timeStr});
+    logs.push({name:selectedWorker.name,kaisha:selectedWorker.kaisha,shokushu:selectedWorker.shokushu,type:currentType,time:timeStr});
     hideLoading(btn);
 
     const isIn=currentType==='入場';
@@ -352,16 +347,70 @@
     show('s-done');
   }
   function continueRecord(){startRecord(currentType);}
-  function updateLog(){
+  async function updateLog(){
     const anken=document.getElementById('sel-anken').value;
     const logArea=document.getElementById('log-area');
     const ktArea=document.getElementById('kt-area');
     const totalCount=document.getElementById('total-count');
     if(!anken){
+      workers=[];logs=[];
       logArea.innerHTML='<div class="empty-log">案件を選択してください</div>';
       ktArea.innerHTML='<div class="kt-header"><span>工種</span><span>入場</span><span>退場</span><span>現在</span></div><div class="empty-log">案件を選択してください</div>';
       totalCount.textContent='在場 0名';return;
     }
+    logArea.innerHTML='<div class="empty-log">読み込み中...</div>';
+    ktArea.innerHTML='<div class="kt-header"><span>工種</span><span>入場</span><span>退場</span><span>現在</span></div><div class="empty-log">読み込み中...</div>';
+
+    // ① 作業員マスタから該当案件の作業員を取得（検索用）
+    try {
+      const data=await fetchWorkers('');
+      workers=(data||[])
+        .filter(w=>{
+          const a=String(w['案件ID']||'').trim();
+          return !a || a===anken; // 案件一致 or 案件未設定（移行データ）
+        })
+        .map(w=>({
+          id:String(w['作業員ID']||''),
+          name:String(w['氏名']||''),
+          kana:String(w['ふりがな']||''),
+          kaisha:String(w['所属会社']||''),
+          jisu:String(w['次数']||''),
+          shokushu:String(w['職種']||'その他')
+        }))
+        .filter(w=>w.name);
+    } catch(e){
+      console.warn('作業員取得エラー:',e);
+      workers=[];
+    }
+
+    // ② 当日の入退場記録をSheetsから取得
+    try {
+      const recs=await fetchNyutaijo(anken,'');
+      const todayJP=`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
+      const todayISO=todayStr();
+      logs=(recs||[])
+        .filter(r=>{
+          const d=String(r['記録日']||'');
+          return d.startsWith(todayJP)||d.startsWith(todayISO);
+        })
+        .map(r=>({
+          name:String(r['氏名']||''),
+          kaisha:String(r['所属会社']||''),
+          shokushu:String(r['職種']||'その他'),
+          type:String(r['種別']||''),
+          time:String(r['記録時刻']||'')
+        }));
+    } catch(e){
+      console.warn('入退場記録取得エラー:',e);
+      logs=[];
+    }
+    renderLog();
+  }
+
+  function renderLog(){
+    const logArea=document.getElementById('log-area');
+    const ktArea=document.getElementById('kt-area');
+    const totalCount=document.getElementById('total-count');
     if(logs.length===0){
       logArea.innerHTML='<div class="empty-log">まだ記録がありません</div>';
       ktArea.innerHTML='<div class="kt-header"><span>工種</span><span>入場</span><span>退場</span><span>現在</span></div><div class="empty-log">記録がありません</div>';
@@ -369,14 +418,13 @@
     }
     let html='';
     [...logs].reverse().forEach(log=>{
-      const w=workers.find(w=>w.id===log.workerId);if(!w)return;
       const cls=log.type==='入場'?'in':'out';
       const badge=log.type==='入場'?'<span class="badge-in">入場</span>':'<span class="badge-out">退場</span>';
-      html+=`<div class="log-item"><div class="log-avatar ${cls}">${w.name.charAt(0)}</div><div class="log-info"><div class="log-name">${w.name}</div><div class="log-sub">${w.kaisha} / ${w.shokushu}</div></div><div class="log-right">${badge}<div class="log-time">${log.time}</div></div></div>`;
+      html+=`<div class="log-item"><div class="log-avatar ${cls}">${log.name.charAt(0)}</div><div class="log-info"><div class="log-name">${log.name}</div><div class="log-sub">${log.kaisha} / ${log.shokushu}</div></div><div class="log-right">${badge}<div class="log-time">${log.time}</div></div></div>`;
     });
     logArea.innerHTML=html;
     const sm={};
-    logs.forEach(log=>{const w=workers.find(w=>w.id===log.workerId);if(!w)return;if(!sm[w.shokushu])sm[w.shokushu]={in:0,out:0};if(log.type==='入場')sm[w.shokushu].in++;else sm[w.shokushu].out++;});
+    logs.forEach(log=>{if(!sm[log.shokushu])sm[log.shokushu]={in:0,out:0};if(log.type==='入場')sm[log.shokushu].in++;else sm[log.shokushu].out++;});
     let ti=0,to=0;
     let kt='<div class="kt-header"><span>工種</span><span>入場</span><span>退場</span><span>現在</span></div>';
     Object.entries(sm).forEach(([s,c])=>{const cur=c.in-c.out;ti+=c.in;to+=c.out;kt+=`<div class="kt-row"><div><div class="kt-name">${s}</div></div><div class="kt-num num-in">${c.in}</div><div class="kt-num num-out">${c.out}</div><div class="kt-num num-cur">${cur}</div></div>`;});
