@@ -171,7 +171,7 @@
     <div class="form-body">
       <div class="sec-label">📊 工種別人員（入退場記録より自動集計）</div>
       <div class="kt-table" id="s3-kt-table">
-        <div class="kt-header"><span>工種 / 業者</span><span>入場</span><span>退場</span><span>現在</span></div>
+        <div class="kt-header"><span>工種 / 協力会社</span><span>入場</span><span>退場</span><span>現在</span></div>
         <div style="padding:14px;text-align:center;font-size:12px;color:#888;">読み込み中...</div>
       </div>
 
@@ -397,7 +397,7 @@
     const today=todayStr();
     const todayJP=`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
 
-    // 工種別人員（業者名も表示）
+    // 工種別人員（協力会社も表示）
     try {
       const records=await fetchNyutaijo(ankenId,'');
       const todayRecs=records.filter(r=>{
@@ -411,7 +411,7 @@
         if(r['種別']==='入場')sm[key].in++;else sm[key].out++;
       });
       let ti=0,to=0;
-      let kt='<div class="kt-header"><span>工種 / 業者</span><span>入場</span><span>退場</span><span>現在</span></div>';
+      let kt='<div class="kt-header"><span>工種 / 協力会社</span><span>入場</span><span>退場</span><span>現在</span></div>';
       Object.entries(sm).forEach(([key,c])=>{
         const [shoku,kaisha]=key.split('|');
         const cur=c.in-c.out;ti+=c.in;to+=c.out;

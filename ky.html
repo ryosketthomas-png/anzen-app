@@ -117,7 +117,7 @@
         </select>
       </div>
       <div class="field">
-        <div class="field-label">業者名 <span class="req">必須</span></div>
+        <div class="field-label">協力会社 <span class="req">必須</span></div>
         <select id="f-gyosha">
           <option value="">先に現場名を選択</option>
         </select>
@@ -376,7 +376,7 @@
 
   function next1(){
     if(!document.getElementById('f-genba').value){alert('現場名を選択してください');return;}
-    if(!document.getElementById('f-gyosha').value){alert('業者名を選択してください');return;}
+    if(!document.getElementById('f-gyosha').value){alert('協力会社を選択してください');return;}
     if(!document.getElementById('f-shokucho').value){alert('安全衛生責任者（職長）を入力してください');return;}
     if(!selectedWeather){alert('天候を選択してください');return;}
     goTo('s2');
