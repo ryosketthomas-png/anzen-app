@@ -7,18 +7,44 @@
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyPixJZWnLQMbrlfm2uR-hIX1A8_lw6rvpl7nsBbvO2rPQD8P8BaSKFXUn4p8ERUvom/exec';
 
 // ===================================================
+// 認証（現場PIN = アプリキー）
+// ===================================================
+function getAppKey() {
+  return localStorage.getItem('anzen_app_key') || '';
+}
+function setAppKey(key) {
+  localStorage.setItem('anzen_app_key', key);
+}
+function clearAppKey() {
+  localStorage.removeItem('anzen_app_key');
+}
+function logoutApp() {
+  clearAppKey();
+  location.href = 'login.html';
+}
+// 認証エラー時：キーを消してログイン画面へ
+function handleAuthError_() {
+  clearAppKey();
+  alert('認証エラー：現場PINが正しくないか変更されました。再ログインしてください。');
+  location.href = 'login.html';
+}
+
+// ===================================================
 // 共通送信関数
 // ===================================================
 async function postToSheets(sheetType, data) {
   try {
-    const payload = { type: sheetType };
+    const payload = { type: sheetType, appKey: getAppKey() };
     Object.keys(data).forEach(k => { payload[k] = data[k]; });
     const res = await fetch(GAS_URL, {
       method: 'POST',
       body: JSON.stringify(payload)
     });
     const json = await res.json();
-    if (json.status !== 'ok') throw new Error(json.message);
+    if (json.status !== 'ok') {
+      if (json.message === 'AUTH_ERROR') { handleAuthError_(); }
+      throw new Error(json.message);
+    }
     return json.id;
   } catch(e) {
     console.error('Sheets送信エラー:', e);
@@ -28,10 +54,13 @@ async function postToSheets(sheetType, data) {
 
 async function getFromSheets(type, params = {}) {
   try {
-    const q = new URLSearchParams({ type, ...params }).toString();
+    const q = new URLSearchParams({ type, appKey: getAppKey(), ...params }).toString();
     const res = await fetch(`${GAS_URL}?${q}`);
     const json = await res.json();
-    if (json.status !== 'ok') throw new Error(json.message);
+    if (json.status !== 'ok') {
+      if (json.message === 'AUTH_ERROR') { handleAuthError_(); }
+      throw new Error(json.message);
+    }
     return json.data;
   } catch(e) {
     console.error('Sheets取得エラー:', e);
@@ -210,3 +239,13 @@ function nowTimeStr() {
   const n = new Date();
   return `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
 }
+
+// ===================================================
+// 未ログインなら自動でログイン画面へ（login.html自身は除外）
+// ===================================================
+(function() {
+  const isLoginPage = location.pathname.endsWith('login.html');
+  if (!isLoginPage && !getAppKey()) {
+    location.href = 'login.html';
+  }
+})();

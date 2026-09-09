@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ログイン | 安全書類管理</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 14px; }
+  .wrap { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 24px; }
+  .card { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 16px; padding: 28px 22px; }
+  .logo { text-align: center; margin-bottom: 18px; }
+  .logo-icon { width: 56px; height: 56px; border-radius: 14px; background: #eff6ff; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 10px; }
+  .logo-title { font-size: 16px; font-weight: 700; }
+  .logo-sub { font-size: 11px; color: #888; margin-top: 3px; }
+  .field-label { font-size: 11px; color: #888; margin-bottom: 6px; }
+  input[type="password"], input[type="text"] {
+    width: 100%; padding: 12px; font-size: 16px; border: 0.5px solid #d0d0c8;
+    border-radius: 10px; background: #fff; color: #1a1a1a; font-family: inherit;
+    text-align: center; letter-spacing: 2px;
+  }
+  input:focus { outline: none; border-color: #1a56db; }
+  .show-toggle { font-size: 11px; color: #888; background: none; border: none; cursor: pointer; text-decoration: underline; display: block; margin: 6px 0 0 auto; }
+  .err { display: none; font-size: 11px; color: #c81e1e; background: #fee2e2; border: 0.5px solid #fca5a5; border-radius: 8px; padding: 8px 10px; margin-top: 10px; line-height: 1.5; }
+  .btn-login { width: 100%; padding: 13px; font-size: 14px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; background: #1a56db; color: #fff; margin-top: 14px; }
+  .btn-login:disabled { opacity: 0.4; cursor: not-allowed; }
+  .note { font-size: 10px; color: #888; text-align: center; margin-top: 14px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">🏗</div>
+      <div class="logo-title">安全書類管理システム</div>
+      <div class="logo-sub">現場PINを入力してください</div>
+    </div>
+    <div class="field-label">現場PIN</div>
+    <input type="password" id="pin" placeholder="●●●●●●" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="show-toggle" onclick="togglePin()">表示する</button>
+    <div class="err" id="err"></div>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">ログイン</button>
+    <div class="note">
+      PINは現場責任者から共有されます。<br>
+      一度ログインすると、この端末では次回から入力不要です。
+    </div>
+  </div>
+</div>
+
+<script src="api.js"></script>
+<script>
+  // すでにログイン済みならトップへ
+  if (getAppKey()) location.href = 'index.html';
+
+  function togglePin() {
+    const el = document.getElementById('pin');
+    const btn = document.querySelector('.show-toggle');
+    if (el.type === 'password') { el.type = 'text'; btn.textContent = '隠す'; }
+    else { el.type = 'password'; btn.textContent = '表示する'; }
+  }
+
+  async function doLogin() {
+    const pin = document.getElementById('pin').value.trim();
+    const err = document.getElementById('err');
+    const btn = document.getElementById('btn-login');
+    err.style.display = 'none';
+    if (!pin) { err.textContent = 'PINを入力してください'; err.style.display = 'block'; return; }
+
+    btn.disabled = true;
+    btn.textContent = '確認中...';
+    try {
+      // GASにpingを送ってPINを検証
+      const q = new URLSearchParams({ type: 'ping', appKey: pin }).toString();
+      const res = await fetch(`${GAS_URL}?${q}`);
+      const json = await res.json();
+      if (json.status === 'ok') {
+        setAppKey(pin);
+        location.href = 'index.html';
+      } else {
+        err.textContent = 'PINが正しくありません。現場責任者に確認してください。';
+        err.style.display = 'block';
+      }
+    } catch(e) {
+      err.textContent = '通信エラーが発生しました。電波状況を確認して再度お試しください。';
+      err.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'ログイン';
+    }
+  }
+</script>
+</body>
+</html>
